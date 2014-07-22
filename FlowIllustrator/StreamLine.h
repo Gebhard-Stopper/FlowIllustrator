@@ -63,7 +63,7 @@ public:
 	 *
 	 *	@param ptOrigin Reference to a CPointf, spcifying the spatial origin of the path line, in domain coordinates.
 	 *	@param nNumIntegrationSteps Number of integration steps to perform for path line integration.
-	 *	@param fArrowLength Lenght of arrows, displayed along the path line.
+	 *	@param fArrowSize Size of arrows in domain coordinates, displayed along the path line.
 	 *	@param color Main color of the path line.
 	 *	@param fStepLength Step length used for path line integration.
 	 */
@@ -132,7 +132,7 @@ public:
 	/**
 	 *	Set the maximum integration lenght of this CStreamLine.
 	 *
-	 *	@param The new integration lenght as size_t.
+	 *	@param nLen The new integration lenght as int.
 	 *
 	 *	@remarks	This function sets m_bNeedRecalc to true and clears all vertices of this CStreamLine,
 	 *				requiring the stream line to be re-caclulated before the next drawing operation.
@@ -183,22 +183,35 @@ public:
 	/**
 	 *	Enables or disables arrows to be displayed along this CStreamLine.
 	 *
-	 *	@param nNumArrows The number of arrows to be displayed.
-	 *	@param bShow Flag, which indicates if the arrows are displayed.
+	 *	@param bShowArrows Flag, which indicates if the arrows are displayed.
 	 */
-	//void ShowArrows(int nNumArrows, bool bShow = true);
 	__inline void ShowArrows(bool bShowArrows) {
 		m_pParams->SetValue(DOP_SHOWARROWS, bShowArrows);
 	}
 
+	/**
+	 *	Retrieve if arrows are displayed in the default rendering style of this CStreamLine.
+	 *
+	 *	@return Returns true, if arrows are displayed, otherwise false.
+	 */
 	__inline bool ShowArrows() const {
 		return m_pParams->GetValueBool(DOP_SHOWARROWS);
 	}
 
+	/**
+	 *	Set the amount of arrows displayed along this CStreamLine.
+	 *
+	 *	@param  nArrowCount The number of arrows as int.
+	 */
 	__inline void SetArrowCount(int nArrowCount) {
 		m_pParams->SetValue(DOP_NUMARROWS, nArrowCount);
 	}
 
+	/**
+	 *	Retrieve the amount of arrows displayed along this CStreamLine.
+	 *
+	 *	@return  The number of arrows as int.
+	 */
 	__inline int GetArrowCount() const {
 		return m_pParams->GetValueInt(DOP_NUMARROWS);
 	}
@@ -206,7 +219,7 @@ public:
 	/**
 	 *	Modify the length of the arrows alogn this CStreamLine.
 	 *
-	 *	@param fLen The new length.
+	 *	@param fSize The new length.
 	 *
 	 *	@remarks	The width of the arrows is scaled proprtionally to the length,
 	 *				wiht a relation of 2:3 (width:lenght).
@@ -316,7 +329,15 @@ protected:
 	CBSpline* GetStreamlineApprox(CPointf* pStreamLine) const; //Experimental
 
 	/**
-	 *	Internal functions to apply new parameters to this CStreamLine.
+	 *	Set one or more parameters to a CDrawingObject.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
+	 *
+	 *	@see CDrawingObject::setParam()
 	 */
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 	virtual void OnSetParams();

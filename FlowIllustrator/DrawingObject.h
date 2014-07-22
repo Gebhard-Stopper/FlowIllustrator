@@ -401,7 +401,7 @@ protected:
 	 *	Set the params of all child objects, matching the object type,
 	 *	specified in params.
 	 *
-	 *	@params params Reference to a CDrawingObjectParams, containing parameter-value pairs to be set.
+	 *	@param params Reference to a CDrawingObjectParams, containing parameter-value pairs to be set.
 	 */
 	virtual bool SetChildObjParams(const CDrawingObjectParams &params);
 
@@ -611,10 +611,18 @@ protected:
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 
 	/**
+	 *	Set one or more parameters to a CDrawingObject. <BR>
+	 *
 	 *	This function is called by SetParams(), after all parameters have been set.
 	 *	Derived classes can overwrite this function to perform additional computations,
 	 *	necessary when parameters have been updated. This can be, e.g. calculate a new bounding box,
 	 *	or update vertex positions.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
 	 */
 	virtual void OnSetParams();
 

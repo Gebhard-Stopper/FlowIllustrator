@@ -186,7 +186,7 @@ public:
 	 *
 	 *	@param posD Location in domain space.
 	 *
-	 *	@param The closest sample in grid coordinates.
+	 *	@return The closest sample in grid coordinates.
 	*/
 	__inline CPointf GetClosestSamplePos(const CPointf& posD) const
 	{
@@ -197,13 +197,27 @@ public:
 	}
 
 protected:
-	// Transforms domain coordinates into grid coordinates
+	/**
+	 *	Called internally by GetGridCoordinates().
+	 *
+	 *	@param dx X-component of the input coordinate in domain coordinates, as float.
+	 *	@param dy Y-component of the input coordinate in domain coordinates, as float.
+	 *	@param gx Reference to a float, which receives the corresponding X-component to dx, in grid coordinates.
+	 *	@param gy Reference to a float, which receives the corresponding Y-component to dy, in grid coordinates.
+	 */
 	__inline void _getGridCoordinates(__in float dx, __in float dy, __out float &gx, __out float &gy) const {
 		gx = (dx - m_rcDomain.m_Min.x)/m_rcDomain.getWidth() * (m_nSamplesX-1);
 		gy = (dy - m_rcDomain.m_Min.y)/m_rcDomain.getHeight() * (m_nSamplesY-1);
 	}
 
-	//Transforms grid coordinates into domain coordinates
+	/**
+	 *	Called internally by GetDomainCoordinates().
+	 *
+	 *	@param gx X-component of the input coordinate in grid coordinates, as float.
+	 *	@param gy Y-component of the input coordinate in grid coordinates, as float.
+	 *	@param gx Reference to a float, which receives the corresponding X-component to gx, in domain coordinates.
+	 *	@param gy Reference to a float, which receives the corresponding Y-component to gy, in domain coordinates.
+	 */
 	__inline void _getDomainCoordinates(__in float gx, __in float gy, __out float &dx, __out float &dy) const {
 		dx = m_rcDomain.m_Min.x + (( gx / (m_nSamplesX-1) ) * m_rcDomain.getWidth()) ;
 		dy = m_rcDomain.m_Min.y + (( gy / (m_nSamplesY-1) ) * m_rcDomain.getHeight()) ;

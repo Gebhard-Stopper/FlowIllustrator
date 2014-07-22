@@ -40,6 +40,12 @@ const char* FindAndJump(const char* buffer, const char* SearchString)
     return buffer;
 }
 
+CAmiraReader::CAmiraReader() 
+	:	m_pFileMapping(NULL), m_hMapping(NULL), m_hFile(NULL),
+		m_nFrameBufferSize(FRAME_BUFFER_SIZE), m_nFrameSize(0), m_nDataOffset(0),
+		m_nCurrFileOffset(0)
+{}
+
 CAmiraReader::~CAmiraReader()
 {
 	CloseCurrentMapping();
@@ -76,16 +82,16 @@ void ErrorExit(LPTSTR lpszFunction)
 
     LocalFree(lpMsgBuf);
     LocalFree(lpDisplayBuf);
-    ExitProcess(dw); 
+
+#ifdef DEBUG
+	ExitProcess(dw);
+#endif
 }
 
 
 bool CAmiraReader::readAmiraFile(const char *FileName, CAmiraVectorField2D *pOutData)
 {
 	CloseCurrentMapping();
-
-	//OFSTRUCT ofs;
-	//m_hFile = reinterpret_cast<HANDLE>(OpenFile(FileName, &ofs, GENERIC_READ));
 
 	m_hFile = ::CreateFileA(FileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -204,39 +210,4 @@ void CAmiraReader::CloseCurrentMapping()
 		m_hMapping		= NULL;
 		m_hFile			= NULL;
 	}
-}
-
-void CAmiraReader::requireTimestep(size_t nTimeStep, CAmiraVectorField2D *pOutData)
-{
-	size_t minRequired = m_nFrameSize * nTimeStep + m_nDataOffset;
-	size_t maxRequired = minRequired + m_nFrameSize;
-
-	if(! (minRequired >= m_nCurrFileOffset && maxRequired < (m_nCurrFileOffset + m_nNumBytesToRead)) )
-	{
-		//we need to remap
-
-		SYSTEM_INFO sysInfo;
-		::GetNativeSystemInfo(&sysInfo);
-
-		size_t multiplyer = minRequired / sysInfo.dwAllocationGranularity;
-		m_nCurrFileOffset = multiplyer * sysInfo.dwAllocationGranularity;
-
-		::UnmapViewOfFile(m_pFileMapping);
-
-		m_pFileMapping = MapViewOfFile(m_hMapping, FILE_MAP_READ, 0, m_nCurrFileOffset, m_nNumBytesToRead);
-
-		pOutData->m_pData = reinterpret_cast<CVector2D*>((char*)m_pFileMapping + (minRequired - m_nCurrFileOffset));
-	}
-
-	//we are in range, nothing to be done
-}
-
-int CAmiraReader::GetMinMappedFrame()
-{
-	return (int)ceil(m_nCurrFileOffset / (float)m_nFrameSize);
-}
-
-int CAmiraReader::GetMaxMappedFrame()
-{
-	return (int)floor( (m_nCurrFileOffset+m_nNumBytesToRead) / (float)m_nFrameSize);
 }

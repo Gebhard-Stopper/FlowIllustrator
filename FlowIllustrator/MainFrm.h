@@ -376,6 +376,9 @@ public:
 	afx_msg void OnRibbonStreaklineIsstreaklet();
 	afx_msg void OnUpdateRibbonStreaklineIsstreaklet(CCmdUI *pCmdUI);
 	afx_msg void OnRibbonStreaklineNumstreaklets();
+	afx_msg void OnRibbonStreamlineStyle();
+	afx_msg void OnRibbonStreaklineStyle();
+	afx_msg void OnRibbonPathlineStyle();
 };
 
 

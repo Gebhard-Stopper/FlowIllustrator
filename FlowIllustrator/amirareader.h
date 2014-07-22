@@ -34,37 +34,55 @@ using namespace std;
 
 #define FRAME_BUFFER_SIZE 50
 
-//Create a memory mapping for the specified file
-//if a file is already open, it must be closed in order to open another file.
+/**
+ *	CAmiraReader allows to access read data stored in amira mesh files (*.am).
+ *	The provided data is accessed via memory mapped files. This has the effect, that
+ *	data does not need to be copied into memory before it can be used. Instead, data
+ *	is moved into memory only if needed. This allows to instantaneously access data
+ *	even from files with several gigabytes in size.
+ *	<BR>
+ *	The disadvantage of this technique is, that ir requires exclusive access to the file being opened.
+ */
 class CAmiraReader : public CBasicFileReader
 {
 public:
-	CAmiraReader() :	m_pFileMapping(NULL), m_hMapping(NULL), m_hFile(NULL),
-						m_nFrameBufferSize(FRAME_BUFFER_SIZE), m_nFrameSize(0), m_nDataOffset(0),
-						m_nCurrFileOffset(0){}
+	/** 
+	 *	Creates a new CAmiraReader object and initializes it.
+	 */
+	CAmiraReader();
+
+	/**
+	 *	Destroys this CAmiraReader object and closes the currently opened file.
+	 */
 	virtual ~CAmiraReader();
 
 private:
-	void *m_pFileMapping;
-	HANDLE m_hMapping;
-	HANDLE m_hFile;
+	void *m_pFileMapping;	/**< Pointer from the address space of FlowIllustrator into the mapped file. */
+	HANDLE m_hMapping;		/**< Handle to the file mapping.*/
+	HANDLE m_hFile;			/**< Handle to the file that is being mapped into memory.*/
 
 	//Helpers for mapping file frames from disk to memory
 private:
-	size_t	m_nNumBytesToRead;	//Must be at least two times the size of the systems Allocation granularity in order to capture silulation frames that overlap
-								//the boundary of two allocation frames
-	size_t	m_nFrameSize;		//The size of a single simulation frame in bytes
-	size_t	m_nDataOffset;		//The offset from the beginning of the file to where the actual data starts
-	size_t	m_nFrameBufferSize;	//Number of frames to buffer in memory
-
-	size_t	m_nCurrFileOffset;	//Current offset within the file in bytes (must be a multiple of AllocationGranularity)
+	size_t	m_nNumBytesToRead;	/**< Must be at least two times the size of the systems Allocation granularity in order to capture simulation frames that overlap the boundary of two allocation frames.*/
+	size_t	m_nFrameSize;		/**< The size of a single simulation frame in bytes.*/
+	size_t	m_nDataOffset;		/**< The offset from the beginning of the file to where the actual data starts.*/
+	size_t	m_nFrameBufferSize;	/**< Number of frames to buffer in memory.*/
+	size_t	m_nCurrFileOffset;	/**< Current offset within the file in bytes (must be a multiple of AllocationGranularity).*/
 
 private:
+	/**
+	 *	Closes the current file mapping and releases all current resources.
+	 */
 	void CloseCurrentMapping();
 
 public:
+	/**
+	 *	Opens an amira mesh file (*.am), maps it into the memory of the provided CAmiraVectorField2D.
+	 *
+	 *	@param FileName The name of the amira mesh file to be opened as pointer to char array.
+	 *	@param pOutData Pointer to a CAmiraVectorField2D, that allows FlowIllustrator to access the data in the specified file.
+	 *
+	 *	@return This function returns true, if the specified file could be opened and was successfully mapped into memory. Otherwise it returns false.
+	 */
 	bool readAmiraFile(const char *FileName, CAmiraVectorField2D *pOutData);
-	void requireTimestep(size_t nTimeStep, CAmiraVectorField2D *pOutData);	//Ensures the data required for nTimeStep is mapped to memory
-	int GetMinMappedFrame();
-	int GetMaxMappedFrame();
 };

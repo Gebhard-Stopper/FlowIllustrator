@@ -75,8 +75,8 @@ public:
 	 *
 	 *	@param vec Reference to a CVector3D, whose X, Y and Z-components are copied.
 	 */
-	__inline CVector3D(const CVector3D &vev)
-		: x(vev.x), y(vev.y), z(vev.z) {}
+	__inline CVector3D(const CVector3D &vec)
+		: x(vec.x), y(vec.y), z(vec.z) {}
 
 	/**
 	 *	Destroy this CVector3D and all of its data.
@@ -290,8 +290,8 @@ public:
 	 *	@return This operator returns true, if the values of the components of this CVector3D are equal 
 	 *			to the respective components of the other CVector3D, otherwise false.
 	 */
-	__inline bool operator == (const CVector3D& v) {
-		return ( (x == v.x) && (y == v.y) && (z == v.z) );
+	__inline bool operator == (const CVector3D& vec) {
+		return ( (x == vec.x) && (y == vec.y) && (z == vec.z) );
 	}
 
 	/**
@@ -303,8 +303,8 @@ public:
 	 *	@return This operator returns true, if at least one of the values of the components of this CVector3D is not equal 
 	 *			to the respective component of the other CVector3D, otherwise false.
 	 */
-	__inline bool operator != (const CVector3D& v){
-		return ( (x != v.x) || (y != v.y) || (z != v.z) );
+	__inline bool operator != (const CVector3D& vec){
+		return ( (x != vec.x) || (y != vec.y) || (z != vec.z) );
 	}
 
 	/**

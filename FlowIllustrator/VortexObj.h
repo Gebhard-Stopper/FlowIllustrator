@@ -112,7 +112,7 @@ public:
 	 *
 	 *	@param nSmoothness The Smoothness as int
 	 *
-	 *	@param The specified smoothness is used as the half-size of a box filter, used to smooth the vertices of the speed lines.
+	 *	@remarks The specified smoothness is used as the half-size of a box filter, used to smooth the vertices of the speed lines.
 	 */
 	__inline void SetTrajectorySmoothness(int nSmoothness) {
 		m_pParams->SetValue(DOP_SMOOTHNESS, nSmoothness);
@@ -123,7 +123,7 @@ public:
 	 *
 	 *	@return The Smoothness as int
 	 *
-	 *	@param The specified smoothness is used as the half-size of a box filter, used to smooth the vertices of the speed lines.
+	 *	@remarks The specified smoothness is used as the half-size of a box filter, used to smooth the vertices of the speed lines.
 	 */
 	__inline int GetTrajectorySmoothness() const {
 		return m_pParams->GetValueInt(DOP_SMOOTHNESS);
@@ -431,6 +431,18 @@ protected:
 	virtual void GetParams(CDrawingObjectParams &params) const; 
 	virtual bool SetChildObjParams(const CDrawingObjectParams &params);
 	virtual void _OnParamsChanged();
+
+	/**
+	 *	Set one or more parameters to a CDrawingObject.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
+	 *
+	 *	@see CDrawingObject::setParam()
+	 */
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 	virtual void OnSetParams();
 

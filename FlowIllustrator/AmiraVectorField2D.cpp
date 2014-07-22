@@ -148,104 +148,6 @@ __inline void CAmiraVectorField2D::_getJacobian(float x, float y, float t, arma:
 	(*pJacobian)(1,2) = (w1.y - w2.y)/(div);	//V_t
 }
 
-CVector3D CAmiraVectorField2D::GetFeatureFlowField(float dx, float dy, float t) const
-{
-	static float x, y;
-
-	_getGridCoordinates(dx, dy, x, y);
-
-	return _getFeatureFlowField(x,y,t);
-}
-
-CVector3D CAmiraVectorField2D::_getFeatureFlowField(float x, float y, float t) const
-{
-	arma::fmat33 J;		//The Jacobian
-	J.zeros();			//Fill with zeros
-
-	_getJacobian(x, y, t, &J);
-
-	//Find eigenvalues
-	std::complex<float> c( static_cast<float>( pow((J(1,1)-J(0,0))/2.0, 2) + J(0,1)*J(1,0) - J(0,0)*J(1,1)) );
-	c = std::sqrt(c);
-
-	//Use epsilon
-	if (fabs(c.imag()) > EPSILON) // Do we have a complex result?
-	{
-		CVector3D f (	J(0,1)*J(1,2) - J(1,1)*J(0,2),		// U_y*V_t - V_y*U_t
-						J(0,2)*J(1,0) - J(1,2)*J(0,0),		// U_t*V_x - V_t*U_x
-						J(0,0)*J(1,1) - J(1,0)*J(0,1));		// U_x*V_y - V_x*U_y
-
-			return f;
-	}
-
-	return CVector3D();
-}
-
-//Jeong and Hussain
-bool CAmiraVectorField2D::isVortex_lambda2(float dx, float dy, float /*time*/) const
-{
-	arma::fmat22 J;		//The Jacobian
-	J.zeros();			//Fill with zeros
-
-	GetJacobian(dx, dy, &J);
-
-	arma::fmat22 strainRateTensor	= (J + J.t()) / 2.0f;
-	arma::fmat22 deformationTensor	= (J - J.t()) / 2.0f;
-
-	arma::fmat22 dummy = arma::square(strainRateTensor) + arma::square(deformationTensor);
-
-	arma::fvec2 eigval = arma::eig_sym(dummy);
-
-	return ( eigval(0) < EPSILON) ;
-}
-
-//Sujudi and Haimes
-bool CAmiraVectorField2D::isVortex_Eigenvector(float dx, float dy, float time) const
-{
-	arma::fmat33 J;		//The Jacobian
-	J.zeros();			//Fill with zeros
-
-	GetJacobian(dx, dy, time, &J);
-
-	//Find eigenvalues
-	std::complex<float> c( static_cast<float>( pow((J(1,1)-J(0,0))/2.0, 2) + J(0,1)*J(1,0) - J(0,0)*J(1,1)) );
-	c = std::sqrt(c);
-
-	return  ( fabs(c.imag()) > EPSILON); // Do we have a complex result?
-}	
-
-//Roth and Peickert
-bool CAmiraVectorField2D::isVortex_ParallelVectors(float dx, float dy, float time) const
-{
-	arma::fmat33 J;		//The Jacobian
-	J.zeros();			//Fill with zeros
-
-	GetJacobian(dx, dy, time, &J);
-
-	//Find eigenvalues
-	std::complex<float> c( static_cast<float>( pow((J(1,1)-J(0,0))/2.0, 2) + J(0,1)*J(1,0) - J(0,0)*J(1,1)) );
-	c = std::sqrt(c);
-
-	//Use epsilon
-	if ( fabs(c.imag()) > EPSILON) // Do we have a complex result?
-	{
-		//std::complex<float> eig1 ( -(J(1,1)-J(0,0))/2.0 + c.real(), c.imag());
-		//std::complex<float> eig2 ( -(J(1,1)-J(0,0))/2.0 - c.real(), c.imag());
-
-		CVector3D f (	J(0,1)*J(1,2) - J(1,1)*J(0,2),		// U_y*V_t - V_y*U_t
-						J(0,2)*J(1,0) - J(1,2)*J(0,0),		// U_t*V_x - V_t*U_x
-						J(0,0)*J(1,1) - J(1,0)*J(0,1));		// U_x*V_y - V_x*U_y
-
-		CVector3D p = GetVectorAt(dx, dy, 1.0,  time);
-
-		CVector3D crossProd  = f ^ p;
-	
-		return crossProd.abs() > EPSILON;
-	}
-
-	return false;
-}
-
 float CAmiraVectorField2D::GetVorticity(float dx, float dy, float t) const
 {
 	//grid coordinates
@@ -346,8 +248,8 @@ void CAmiraVectorField2D::Init(const CRectF &rcDomain, float fExtentZ, int nSamp
 {
 	CDataField2D::Init(rcDomain, nSamplesX, nSamplesY);
 
-	m_nMaxIdxX	= nSamplesX-1;
-	m_nMaxIdxY	= nSamplesY-1;
+	m_nMaxIdxX		= nSamplesX-1;
+	m_nMaxIdxY		= nSamplesY-1;
 	m_fExtentZ		= fExtentZ;
 	m_bIsMM			= true;
 	m_numTimeSteps	= nSamplesZ;
@@ -569,12 +471,12 @@ void CAmiraVectorField2D::integrateStreakLine(const CVector3D &pos, int nNumStep
 }
 
 
-bool CAmiraVectorField2D::_integrateStreakLine(float fStepLen, float deltaTime, float &fTimeStep, bool &bError, vector<particle> &result, int nIterations) const
+bool CAmiraVectorField2D::_integrateStreakLine(float fStepLen, float deltaTime, float &fTimeStep, bool &bError, vector<particle> &vertexBuff, int nIterations) const
 {
 	bool bresult = true;
 	for (int i=0; i < nIterations && bresult; i++)
 	{
-		for (auto iter = result.begin(); iter != result.end(); ++iter)
+		for (auto iter = vertexBuff.begin(); iter != vertexBuff.end(); ++iter)
 		{
 			iter->pos = _RK4(iter->pos, fTimeStep, fStepLen, 1, bError);
 

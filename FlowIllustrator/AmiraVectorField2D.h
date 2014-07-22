@@ -46,6 +46,9 @@ protected:
 	float		 m_fExtentZ;		/**< Extent of this CAmiraVectorField2D in temporal domain in seconds. */	//
 	CBasicFileReader *m_pFileRead;	/**< Pointer to a class, derived from CBasicFileReader, that handles reading vector fields from disk. */
 
+	/**
+	 *	Helper structure to integrate through 2D, time-dependent vector fields.
+	 */
 	struct particle {
 		CVector3D	pos;
 		double		time;
@@ -59,10 +62,37 @@ public:
 	~CAmiraVectorField2D(void);
 
 public:
+	/**
+	 *	Load an amira mesh file (*.am).
+	 *
+	 *	@param strFileName The file name as char array.
+	 *
+	 *	@remarks This function internally uses the loading function of a class derived from CBasicFileReader, and pointet to by m_pFileRead. 
+	 */
 	bool LoadAmiraFile(const char* strFileName);
 
 protected:
+	/**
+	 *	Initializes the parameters of the vector field, represented by this class.
+	 *
+	 *	@param rcDomain	The two dimensional rectangle defining the domain of the vector field.
+	 *	@param fExtentZ	The extent of the domain in z-direction. In a 2D, time-dependent vector field, this is the time span in secornds.
+	 *	@param nSamplesX Number of samples in x-direction.
+	 *	@param nSamplesY Number of samples in y-direction
+	 *	@param nSamplesZ Number of time steps.
+	 *	@param pData Pointer to the actual data.	
+	 */
 	void Init(const CRectF &rcDomain, float fExtentZ,  int nSamplesX, int nSamplesY, int nSamplesZ, CAmiraVectorField2D* pData);
+
+	/**
+	 *	Performs a Runge-Kutta integration on the current time step of the vector field.
+	 *
+	 *	@param xOrg	X-coordinate of the starting point of the integration in domain coordinates.
+	 *	@param yOrg Y-coordinate of the starting point of the integration in domain coordinates.
+	 *	@param numSteps Number of integration steps to be performed.
+	 *	@param stepLen The step lenght used by the integrator.
+	 *	@param pOutBuff A pointer to an array of numSteps CPointf elements to receive the vertices of the resulting stream line.
+	 */
 	virtual void integrateRK4(float xOrg, float yOrg, int numSteps, float stepLen, CPointf *pOutBuff) const;
 
 public:
@@ -70,10 +100,10 @@ public:
 	 *	Starts Runge-Kutta integration at the specified location in domain space at the current time step.
 	 *
 	 *	@param pos Starting position of integration in domain space
-	 *	@param numSteps Maximum number of integration steps. 
+	 *	@param nNumSteps Maximum number of integration steps. 
 	 *	@param stepLen Step length for RK integrator in grid space
 	 *	@param bForward If true, forward integration is performed, otherwise backward integration
-	 *	@param pOutData Pointer to a std::vector to hold the vertices of the resulting stream line in domain space
+	 *	@param pOutBuff Pointer to a std::vector to hold the vertices of the resulting stream line in domain space
 	 *	@param rcIntegrationDomain Rectangular region in which the integration is performed. can be <= to the domain rectangle of the vector field.
 	 */
 	void integrateRK4(const CVector3D &pos, int nNumSteps, float stepLen, bool bForward, vector<CPointf> *pOutBuff, const CRectF &rcIntegrationDomain) const;
@@ -81,12 +111,11 @@ public:
 	/**
 	 * Starts streak line integration, based on the RK4 integrator.
 	 * 
-	 * @param 
 	 * @param pos Starting position of integration in domain space
-	 * @param numSteps Maximum number of integration steps. 
+	 * @param nNumSteps Maximum number of integration steps. 
 	 * @param stepLen Step length for RK integrator in grid space
 	 * @param bForward If true, forward integration is performed, otherwise backward integration
-	 * @param pOutData Pointer to a std::vector to hold the vertices of the resulting stream line in domain space
+	 * @param pOutBuff Pointer to a std::vector to hold the vertices of the resulting stream line in domain space
 	 * @param rcIntegrationDomain Rectangular region in which the integration is performed. can be <= to the domain rectangle of the vector field.
 	 */
 	void integrateStreakLine(const CVector3D &pos, int nNumSteps, float stepLen, bool bForward, vector<CPointf> *pOutBuff, const CRectF &rcIntegrationDomain) const;
@@ -94,14 +123,13 @@ public:
 	/**
 	 * Starts time line integration, based on the RK4 integrator.
 	 * 
-	 * @param 
 	 * @param ptSeedLineStart Starting point of the seeding line.
 	 * @param ptSeedLineEnd End point of the seeding line.
 	 * @param nNumSamples Number of samples along the seeding line, defined by ptSeedLineStart and ptSeedLineEnd.
-	 * @param numSteps Maximum number of integration steps. 
+	 * @param nNumSteps Maximum number of integration steps. 
 	 * @param stepLen Step length for RK integrator in grid space
 	 * @param bForward If true, forward integration is performed, otherwise backward integration
-	 * @param pOutData Pointer to a std::vector to hold the vertices of the resulting time line in domain space
+	 * @param pOutBuff Pointer to a std::vector to hold the vertices of the resulting time line in domain space
 	 * @param rcIntegrationDomain Rectangular region in which the integration is performed. can be <= to the domain rectangle of the vector field.
 	 */
 	void integrateTimeLine(const CPointf &ptSeedLineStart, const CPointf &ptSeedLineEnd, int nNumSamples, int nNumSteps, float stepLen, bool bForward, vector<CPointf> *pOutBuff, const CRectF &rcIntegrationDomain) const;
@@ -288,17 +316,6 @@ public:
 	virtual CVector2D GetVectorAt(const CPointf &point) const;
 
 	/**
-	 *	Returns the corresponding vector of the feature flow field at the specified position.
-	 *
-	 *	@param dx X-Component of the location in domain space.
-	 *	@param dy Y-Component of the location in domain space.
-	 *	@param time Timestep at which the vector is to be interpolatet.
-	 *
-	 *	@return The vector of the corresponding feature flow field.
-	 */
-	CVector3D GetFeatureFlowField(float dx, float dy, float time) const;	//Amira
-
-	/**
 	 *	Returns the vorticity value at the specified location at the specified time
 	 *
 	 *	@param dx X-Component of the location in domain space
@@ -394,40 +411,123 @@ public:
 		return m_numTimeSteps/m_fExtentZ;
 	}
 
-
+	/**
+	 *	Retrieve the extent in z-direction (temporal).
+	 *
+	 *	@return The extent in z-direction as float.
+	 */
 	__inline float GetZMax() const {
 		return m_fExtentZ;
 	}
 
-	//Vortex detection functions
-public:
-	bool isVortex_lambda2(float x, float y, float time) const;			//Jeong and Hussain
-	bool isVortex_Eigenvector(float x, float y, float time) const;		//Sujudi and Haimes
-	bool isVortex_ParallelVectors(float x, float y, float time) const;	//Roth and Peickert
-
 protected:
+	/**
+	 *	Retrieve the bi-linearly interpolated vextor at the specified location.
+	 *
+	 *	@param x X-component of the vector location in grid coordinates.
+	 *	@param y Y-component of the vector location in grid coordinates.
+	 *	@param z Z-component of the vector location in grid coordinates. This value is pushed through. Its main use is for stream line and path line integration.
+	 *	@param time The time step, at which the vector is to be retrieved.
+	 *
+	 *	@return A CVector3D with the components ( u(x,y,t), v(x,y,t), z)
+	 */
 	CVector3D _getVectorAt(float x, float y, float z, float time) const;//Amira
+
+	/**
+	 *	Retrieve the bi-linearly interpolated vextor at the specified location.
+	 *
+	 *	@param x X-component of the vector location in grid coordinates.
+	 *	@param y Y-component of the vector location in grid coordinates.
+	 *	@param time The time step, at which the vector is to be retrieved.
+	 *	
+	 *	@return A CVector2D with the components ( u(x,y,t), v(x,y,t) )
+	 */
 	CVector2D _getVectorAt(float x, float y, float time) const;//Amira
-	CVector3D _getFeatureFlowField(float gx, float gy, float t) const;
+
+	/**
+	 *	@see GetJacobian(float dx, float dy, float t, arma::fmat33 *pJacobian)
+	 */
 	void _getJacobian(float x, float y, float t, arma::fmat33 *pJacobian) const;
+
+	/**
+	 *	@see GetVorticity(float dx, float dy, float time)
+	 */
 	float _getVorticity(float x, float y, float time) const;
-	bool _integrateStreakLine(float fStepLen, float deltaTime, float &fTimeStep, bool &bError, vector<particle> &result, int nIterations) const;
 
-	/*
-		These functions return a pointer to a new CVectorField2D.
-		The data pointer of the CVectorField2D however points to data
-		int the CAmiraVectorField2D this function was called from!
+	/**
+	 *	Perform one iteration of the streak line computation.
+	 *
+	 *	@param fStepLen	The step lenght used by the RK4 integrator.
+	 *	@param deltaTime The time difference between two integration steps.
+	 *	@param fTimeStep The current time step.
+	 *	@param bError Indicates if an error occured during RK4 integration.
+	 *	@param vertexBuff Pointer to the vertices (particles) of the streak line to be integrated.
+	 *	@param nIterations Number of iterations to be performed withput inserting a new particle.
+	 *
+	 *	@return Returns true, if no errors occured, or false, if e.g. a particle has left the sample grid.
+	 *
+	 *	@remarks	New particles are inserted into the streak before calling this function into the std::vector referenced by vertexBuff.
+	 *				vertexBuff also contains the result of the integration, when this function returns.
+	 */
+	bool _integrateStreakLine(float fStepLen, float deltaTime, float &fTimeStep, bool &bError, vector<particle> &vertexBuff, int nIterations) const;
 
-		The m_pData pointer MUST BE SET TO nullptr before the CVectorField2D is deleted!
-	*/
+	/**
+	 *	Retrieves a pointer to the time slice at the current time step.
+	 *
+	 *	@return a Pointer to a new CVectorField2D, representing the specified time step.
+	 *
+	 *	@remarks	The returned CVectorField2D holds a pointer into the original data held by this CAmiraVectorField and must not be deleted by the user!
+	 *				The m_pData member of the returned CVectorField2D must be set to nullptr, before the CVectorField2D is deleted.
+	 */
 	CVectorField2D* _getCurrentVectorFieldPtr() const;
+
+	/**
+	 *	Retrieves a pointer to the time slice at the specified time step.
+	 *
+	 *	@param	The time step at which the vector field is to be retrieved.
+	 *
+	 *	@return a Pointer to a new CVectorField2D, representing the specified time step.
+	 *
+	 *	@remarks	This function does not validate the specified time step.
+	 *				If a negative or too large value is given the behaviour of this function is undefined.
+	 *				<BR>
+	 *				The returned CVectorField2D holds a pointer into the original data held by this CAmiraVectorField and must not be deleted by the user!
+	 *				The m_pData member of the returned CVectorField2D must be set to nullptr, before the CVectorField2D is deleted.
+	 */
 	CVectorField2D* _getVectorFieldPtr(int time) const;
 
+	/**
+	 *	Validates, if a gives position in grid coordinates is inside the sample grid boundaries.
+	 *
+	 *	@param pos The location to be validated as reference to a CVector2D.
+	 *
+	 *	@return Returns true, if the specified position is a valid position on the grid of sample locations, therwise false.
+	 *
+	 *	@remarks Although the position to be validated is specified as a CVector2D, it is interpreted as a point location and not a vector.
+	 */
 	bool _insideGrid(const CVector2D& pos) const;
 
+	/**
+	 *	Computes and returns the temporal difference between two RK4 integration steps through the spatio-temporal domain.
+	 *
+	 *	@param z Typically set to 1 or 0, in order to get the time delta for a path line or a stream line computation.
+	 *	@param stepLen The step length used by the RK4 integrator.
+	 */
 	float _getDeltaT(float z, float stepLen) const;
 
 private:
+	/**
+	 *	Performs an actual RK4 integration step.
+	 *	
+	 *	@param pos The position from which the RK4 integration is started.
+	 *	@param fTimeStep The time step from which the RK4 integration is started.
+	 *	@param stepLen The step lenght for the RK4 integrator.
+	 *	@param fDir The integration direction, typically 1 for forward integration and -1 for backward integration.
+	 *	@param bError If true, an error occured during integration, e.g. one of the intermediate results is the zero vector, or one of the components of hte result is infinite.
+	 *	@param bNormalize Set this to true, if the result is to be normalized.
+	 *
+	 *	@return The integration result as CVector3D.
+	 */
 	CVector3D _RK4(const CVector3D &pos, float fTimeStep, float stepLen, float fDir, bool &bError, bool bNormalize=false) const;
 
 	friend class CAmiraReader;

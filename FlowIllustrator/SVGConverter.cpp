@@ -497,7 +497,6 @@ CDrawingObject* CSVGConverter::_getSpeedLine(__in CMarkup &doc)
 	CDrawingObjectParams params(DO_SPEEDLINE);
 	_getStreamLineParams(doc, params);
 
-	params.SetValue(DOP_SPEEDLINE_STYLE,	_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SPEEDLINE_STYLE) ));
 	params.SetValue(DOP_ALPHA,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ALPHA) ));
 	params.SetValue(DOP_ALPHA_MIN,			_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ALPHA_MIN) ));
 	params.SetValue(DOP_THICKNESS_MIN,		_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_THICKNESS_MIN) ));
@@ -682,9 +681,16 @@ void CSVGConverter::_getStreamLineParams(__in CMarkup& doc, CDrawingObjectParams
 	params.SetValue(DOP_INTEGRATIONSTEPS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_INTEGRATIONSTEPS)));
 	params.SetValue(DOP_STEPLENGTH, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_STEPLENGTH)));
 	params.SetValue(DOP_SHOWARROWS, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_SHOWARROWS)));
-	params.SetValue(DOP_DRAWASDROPLETS, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_DRAWASDROPLETS)));
 	params.SetValue(DOP_NUMARROWS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUMARROWS)));
 	params.SetValue(DOP_ARROWSIZE, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ARROWSIZE)));
 	params.SetValue(DOP_SMOOTHNESS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SMOOTHNESS)));
 	params.SetValue(DOP_NUMDROPLETS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUMDROPLETS),1));
+	params.SetValue(DOP_SPEEDLINE_STYLE,	_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SPEEDLINE_STYLE) ));
+
+	bool bDrawAsDroplet =  _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_DRAWASDROPLETS));
+	if (bDrawAsDroplet) {
+		UINT style = params.GetValueUInt(DOP_SPEEDLINE_STYLE) & 0xFF;
+		style |= SL_DROPLET;
+		params.SetValue(DOP_SPEEDLINE_STYLE, style);
+	}
 }

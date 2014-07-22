@@ -39,6 +39,7 @@ CPolyLine::CPolyLine(const floatColor& color, float fThickness)
 	: CDrawingObject(CRectF(0,0,0,0), DO_POLYLINE, color)
 {
 	Init(fThickness);
+	SetThicknessMin(fThickness);
 }
 
 CPolyLine::CPolyLine(const CRectF& BBox, const floatColor& color, DrawingObjectType nType)
@@ -87,12 +88,29 @@ void CPolyLine::_OnParamsChanged()
 {
 }
 
-void CPolyLine::CalcVertexGradients()
+void CPolyLine::CalcVertexNormals()
 {
-	m_Gradients.clear();
-	
+	m_Normals.clear();
+
 	if (m_Points.size() > 2) 
 	{
+		int nDropletCount = GetDropletCount();	//Number of droplets
+		if (nDropletCount < 1) nDropletCount = 1;
+
+		int nBands(nDropletCount == 1? m_Points.size()/2 : 200 ); //Number of vertices per droplet
+		if (nBands < 200) nBands = 200;
+
+		const int vertexCount(nDropletCount * nBands);	//Total number of vertices
+		DWORD dwThicknessMode (GetStyle() & 0xFF0);
+
+		vector<CPointf> vertices;
+		vertices.reserve(vertexCount);
+
+		for (int i=0; i<vertexCount; ++i) {
+			vertices.push_back( _interpolateVertex(i, vertexCount) );
+		}
+
+	
 		static auto calcCentralDiff = [] (const vector<CPointf>& points, int idx) -> CVector2D { 
 			return ((points[idx+1] - points[idx-1]) / 2.0f);
 		};
@@ -109,101 +127,52 @@ void CPolyLine::CalcVertexGradients()
 			return CVector2D(vec.y, -vec.x);
 		};
 
-		float thicknessStart, thicknessEnd, deltaT;
-		float fThickness(GetThickness());
-		float fThicknessMin(GetThicknessMin());
-
 		int nSteps( GetNumGrowSteps() );
 		if (nSteps <= 0) {
-			nSteps = m_Points.size();
+			nSteps = nBands;
 		}
-		int nStartGrow (0);
+		
+		int nStartGrow = (dwThicknessMode == SL_THICKNESS_DECREASE)? (nBands-1)-nSteps : 0;
 
-		switch (GetStyle() & 0xF0) {
-			case SL_THICKNESS_INCREASE:
-				deltaT = (fThickness - fThicknessMin) / nSteps;
-				thicknessStart = fThicknessMin;
-				thicknessEnd = fThickness;
-				break;
-			case SL_THICKNESS_DECREASE:
-				deltaT = -(fThickness - fThicknessMin) / nSteps;
-				thicknessStart = fThickness;
-				thicknessEnd = fThicknessMin;
-				nStartGrow = (m_Points.size()-1)-nSteps;
-				break;
-			default:
-				deltaT = 0;
-				thicknessStart = thicknessEnd = fThickness;
-				nStartGrow = m_Points.size();
-				break;
-		}
+
+		float CurrThickness( _calcThickness(0, nSteps, dwThicknessMode) );
+
 	
-		fThickness = thicknessStart;
+		m_Normals.reserve(2 * vertices.size());
 
-		float CurrThickness( fThickness*(gPixelPerUnit/2.0f) );
-		m_Gradients.reserve(2 * m_Points.size());
-
-		CVector2D dummy ( rot90(calcForwardDiff(m_Points,0).Normalize()) );
+		CVector2D dummy ( rot90(calcForwardDiff(vertices,0).Normalize()) );
 		dummy *= CurrThickness;
 
-		m_Gradients.push_back( m_Points[0].toVector2D() + dummy );
-		m_Gradients.push_back( m_Points[0].toVector2D() - dummy );
+		m_Normals.push_back( vertices[0].toVector2D() + dummy );
+		m_Normals.push_back( vertices[0].toVector2D() - dummy );
 
-		for (int i=1; i < m_Points.size()-1; ++i) {
-			if (i >= nStartGrow) {
-				if (i<(nSteps+nStartGrow)) {
-					fThickness += deltaT;
+		for (int d=0; d<nDropletCount; ++d)
+		{
+			for (int i=1; i < nBands-1; ++i) {
+				int vIndx = (d*nBands)+i;
+				if (i >= nStartGrow) {
+					if (i<(nSteps+nStartGrow)) {
+						CurrThickness = (  _calcThickness(i-nStartGrow, nSteps, dwThicknessMode) );
+					}
 				}
+
+				dummy = rot90(calcCentralDiff(vertices, vIndx).Normalize());
+				dummy *= CurrThickness;
+
+				m_Normals.push_back( vertices[vIndx].toVector2D() + dummy );
+				m_Normals.push_back( vertices[vIndx].toVector2D() - dummy );
 			}
-
-			CurrThickness = ( fThickness*(gPixelPerUnit/2.0f) );
-			dummy = rot90(calcCentralDiff(m_Points, i).Normalize());
-			dummy *= CurrThickness;
-
-			m_Gradients.push_back( m_Points[i].toVector2D() + dummy );
-			m_Gradients.push_back( m_Points[i].toVector2D() - dummy );
 		}
 
 		if (nStartGrow < m_Points.size()-1) {
-			fThickness += deltaT;
+			CurrThickness = (  _calcThickness(vertexCount-nStartGrow, nSteps, dwThicknessMode) );
 		}
 
-		CurrThickness = ( fThickness*(gPixelPerUnit/2.0f) );
-
-		dummy = rot90(calcBackwardDiff(m_Points, m_Points.size()-1).Normalize());
+		dummy = rot90(calcBackwardDiff(vertices, vertices.size()-1).Normalize());
 		dummy *= CurrThickness;
 
-		m_Gradients.push_back( m_Points[m_Points.size()-1].toVector2D() + dummy );
-		m_Gradients.push_back( m_Points[m_Points.size()-1].toVector2D() - dummy );
-	}
-}
-
-void CPolyLine::_drawDroplet(CPolyLine &polyLine)
-{
-	static const int step(4);
-	float thickness = GetThickness() * gPixelPerUnit;
-		
-	float growStep = thickness/ (polyLine.m_Points.size()/ static_cast<float>(step+0.5f) );
-
-	const floatColor& col = polyLine.GetColor();
-	thickness=0;
-	CEllipsoid dummy(0,0,0,0,col);
-
-	for (size_t i=0; i < polyLine.m_Points.size(); i+=step)
-	{
-		int x = i;
-		while (i>0 && i < (polyLine.m_Points.size()-1) && (polyLine.m_Points[i] - polyLine.m_Points[x]).abs() < thickness/(step*2.0f)  ) {
-			i+=step;
-			thickness += growStep/2.0f;
-		}
-
-		if (i < polyLine.m_Points.size()) {
-			dummy.SetCenter(polyLine.m_Points[i]);
-			dummy.SetRadius1(thickness);
-			dummy.SetRadius2(thickness);
-			dummy.Draw();
-			thickness += growStep;
-		}
+		m_Normals.push_back( vertices[vertices.size()-1].toVector2D() + dummy );
+		m_Normals.push_back( vertices[vertices.size()-1].toVector2D() - dummy );
 	}
 }
 
@@ -211,49 +180,19 @@ void CPolyLine::Draw(bool bDrawAsDroplet, int nCutoff)
 {
 	floatColor color = GetColor();
 	float fThickness = GetThickness();
-
-	if (bDrawAsDroplet)
+		
+	if (DrawHalo()) 
 	{
-		CRectF rect(GetRect());
-		int numDroplets(GetDropletCount());
-
-		int numPoints = numDroplets>1? m_Points.size()/(numDroplets+1) : m_Points.size();
-		size_t ptFirst = 0;
-		size_t ptLast = numPoints;
-		int diff = numDroplets > 1? numPoints/(numDroplets-1) : 0;
-
-		for (int i=0; i< numDroplets;++i) {
-			CPolyLine pl(rect, color, fThickness);
-			if (ptLast >= m_Points.size()) {
-				ptLast = m_Points.size()-1;
-			}
-			pl.m_Points.insert( pl.m_Points.begin(), m_Points.begin() + ptFirst, m_Points.begin()+ptLast);
-
-			if (DrawHalo()) {
-				pl.SetColor(GetHaloColor());
-				SetThickness(2.0f*fThickness);
-				_drawDroplet(pl);
-				SetThickness(fThickness);
-				color.alpha = 1.0f;
-				pl.SetColor(color);
-			}
-			_drawDroplet(pl);	
-			ptFirst+= numPoints + diff;
-			ptLast = ptFirst + numPoints;
-		}
+		SetThickness(2*fThickness);
+		SetColor(GetHaloColor());
+		srand (42);
+		_draw(0);
+		SetThickness(fThickness);
+		color.alpha = 1.0f;
+		SetColor(color);
 	}
-	else
-	{
-		if (DrawHalo()) {
-			SetThickness(2*fThickness);
-			SetColor(GetHaloColor());
-			_draw(0);
-			SetThickness(fThickness);
-			color.alpha = 1.0f;
-			SetColor(color);
-		}
-		_draw(nCutoff);
-	}
+	srand (42);
+	_draw(nCutoff);
 }
 
 /*
@@ -268,9 +207,9 @@ void CPolyLine::_draw(int nCutoff)
 {
 	CDrawingObject::Draw();
 
-	CalcVertexGradients();
+	CalcVertexNormals();
 
-	int nMaxVertIdx( m_Gradients.size()-(nCutoff*2)  );
+	int nMaxVertIdx( m_Normals.size()-(nCutoff*2)  );
 
 	float deltaA;
 	float alphaStart, alphaEnd;
@@ -292,7 +231,7 @@ void CPolyLine::_draw(int nCutoff)
 			deltaA = -(GetAlphaMax() - GetAlphaMin()) / nTransparentSteps;
 			alphaStart	= GetAlphaMax();
 			alphaEnd	= GetAlphaMin();
-			nTransparencyStart = (m_Gradients.size()-2)-(nTransparentSteps*2);
+			nTransparencyStart = (m_Normals.size()-2)-(nTransparentSteps*2);
 			break;
 		default:
 			deltaA = 0;
@@ -310,8 +249,8 @@ void CPolyLine::_draw(int nCutoff)
 	glBegin(GL_QUAD_STRIP);
 	for (int i=(nCutoff*2); i<nMaxVertIdx;) {
 		glColor4fv(reinterpret_cast<float*>(&col));
-		glVertex2fv(reinterpret_cast<float*>(&m_Gradients[i++]));
-		glVertex2fv(reinterpret_cast<float*>(&m_Gradients[i++]));
+		glVertex2fv(reinterpret_cast<float*>(&m_Normals[i++]));
+		glVertex2fv(reinterpret_cast<float*>(&m_Normals[i++]));
 		if (i>=nTransparencyStart && i < nTransparencyEnd)
 			col.alpha	+= deltaA;
 	}
@@ -438,4 +377,124 @@ void CPolyLine::CopyVertices(const CPolyLine *pSrc)
 {
 	m_Points.clear();
 	m_Points.insert(m_Points.begin(), pSrc->m_Points.begin(), pSrc->m_Points.end());
+}
+
+CPointf CPolyLine::_interpolateVertex(int nIndx, int nVertexCount)
+{
+	float fRealIndx ( (m_Points.size()  * (static_cast<float>(nIndx)/nVertexCount)) );
+	
+	int nLBound (static_cast<int>(fRealIndx));
+	int nUBound (nLBound + 1);
+	float fWeight (nUBound - fRealIndx);
+
+	if (nUBound > (m_Points.size()-1)) {	//just to be on the safe side
+		return m_Points[m_Points.size()-1];
+	}
+
+	return m_Points[nLBound]*fWeight + m_Points[nUBound]*(1.0f-fWeight);
+}
+
+float CPolyLine::_calcThickness(int nIndx, int nVertexCount, DWORD dwThicknessFunc)
+{
+	float fThickness(GetThickness());
+	float fThicknessMin(GetThicknessMin());
+
+	int nSteps( GetNumGrowSteps() );
+	if (nSteps <= 0) 
+		nSteps = nVertexCount;
+
+	float retVal;
+
+	switch (dwThicknessFunc) 
+	{
+		case SL_THICKNESS_INCREASE:
+			retVal = ((fThickness - fThicknessMin) / nSteps) * (static_cast<float>(nIndx));
+			break;
+		case SL_THICKNESS_DECREASE:
+			retVal = fThickness - ((fThickness - fThicknessMin) / nSteps) * (static_cast<float>(nIndx));
+			break;
+		case SL_DASHED:
+			{
+				float f ( (static_cast<float>(nIndx)/nSteps ) );
+				if ( f< 1/4.0f || f > 3/4.0f) {
+					retVal = fThickness;
+				} else {
+					retVal = 0.0f;
+				}
+				break;
+			}
+		case SL_ARROW:
+			{
+				nSteps *= .95f;
+				float f ( (static_cast<float>(nIndx)/nSteps ) );
+				if (f < 1.0f)
+				{
+					if (f < .8f) {
+						retVal = f*fThickness;
+					} else if (f == .8f) {
+						retVal = 2*fThickness;
+					} else {
+						float n = nSteps - (.8f)*nSteps;
+						float i = nIndx - (.8f)*nSteps;
+
+						retVal = 2*fThickness * (1.0f - (i / n));
+					}
+				}
+				else
+				{
+					retVal = 0.0f;
+				}
+				break;
+			}
+		case SL_TRIANGLE:
+			{
+				float f ( (static_cast<float>(nIndx)/nSteps ) );
+				if (f <= .5)
+				{
+					retVal = fThickness - ((fThickness) * (static_cast<float>(nIndx*2) / nSteps));
+				} else {
+					retVal = 0;
+				}
+				break;
+			}
+		case SL_DROPLET:
+			{
+				nSteps *= .97;
+
+				float f ( (static_cast<float>(nIndx)/(nSteps) ) );
+				if ( f <= 1)
+				{
+					if (f <.90) {
+						retVal = ((fThickness) * (static_cast<float>(nIndx) / (nSteps*.9)));
+					} else {
+						float s = nSteps*.1f;
+						float i = nIndx - (nSteps*.9f);
+
+						retVal = sqrt( 1.0f - pow ( i/s, 2.0f) ) * fThickness;
+					}
+				} else {
+					retVal = 0.0f;
+				}
+				break;
+			}
+		case SL_ELLIPSE:
+			{
+				float s = nSteps *.95f;
+				float f ( (static_cast<float>(nIndx)/s ) );
+
+				if (f < 1.0f) {
+					f -= .5f;
+					f *= 2.0f;
+					retVal = sqrt( 1.0f - pow ( f, 2.0f) ) * fThickness;
+				} else {
+					retVal = 0.0f;
+				}
+				break;
+			}
+		default:
+			retVal = fThickness;
+			break;
+	}
+
+	return retVal*(gPixelPerUnit/2.0f);
 }

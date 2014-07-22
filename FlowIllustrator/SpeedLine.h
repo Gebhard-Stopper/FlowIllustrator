@@ -41,7 +41,7 @@ public:
 	/**
 	 *	Create a new CSpeedLine object.
 	 *
-	 *	@param pColor The main Color of the new CSpeedLine.
+	 *	@param color The main Color of the new CSpeedLine.
 	 *	@param fThickness The thickness of the new CSpeedLine. Also used as the maximum thickness, if m_dwStyle uses SL_THICKNESS_INCREASE or SL_THICKNESS_DECREASE.
 	 *	@param fAlpha Maximum alpah value, used if m_dwStyle uses SL_TRANSPARENCY_INCREASE or SL_TRANSPARENCY_DECREASE.  m_fAlphaMin is set to fAlpha/100.
 	 */

@@ -32,7 +32,7 @@
 //TODO: calc Bounding rect
 
 CBSpline::CBSpline(int numPoints, const floatColor& color)
-	: CDrawingObject(CRectF(0.0f, 0.0f, 0.0f, 0.0f), DO_BSPLINE, color), m_nNumPoints(numPoints)
+	: CDrawingObject(CRectF(0.0f, 0.0f, 0.0f, 0.0f), DO_BSPLINE, color), m_nNumCtrlPoints(numPoints)
 {
 	m_pPoints	= new CPointf[numPoints];
 	m_pKnots	= new float[numPoints+ORDER];
@@ -53,11 +53,11 @@ void CBSpline::Draw()
 	//done
 	float step = 0.01f;
 
-	int numSteps	= static_cast<int>(m_pKnots[m_nNumPoints+(ORDER-1)] / step);
+	int numSteps	= static_cast<int>(m_pKnots[m_nNumCtrlPoints+(ORDER-1)] / step);
 	CPointf *points = new CPointf[numSteps];
 	int i=0;
 
-	for (float t = 0; t<m_pKnots[m_nNumPoints+(ORDER-1)]; t += step, i++)
+	for (float t = 0; t<m_pKnots[m_nNumCtrlPoints+(ORDER-1)]; t += step, i++)
 	{
 		int r = getR(t); // we go backwards, r ==Max(i)
 		points[i] = deBoor(DEGREE, r, t);
@@ -82,7 +82,7 @@ CPointf CBSpline::deBoor(int j, int i, float t)
 
 int CBSpline::getR(float t)
 {
-	for (int i = 1; i < m_nNumPoints + ORDER - 1 ; i++)
+	for (int i = 1; i < m_nNumCtrlPoints + ORDER - 1 ; i++)
 	{
 		if ( t < m_pKnots[i] ) return i-1;
 	}
@@ -95,26 +95,26 @@ void CBSpline::CalcKnotVector()
 	//calculates a uniform knot vektor
 	
 	int deg		= ORDER-1;
-	//int denom	= m_nNumPoints-deg;
-	float max	= static_cast<float>(m_nNumPoints - deg);
+	//int denom	= m_nNumCtrlPoints-deg;
+	float max	= static_cast<float>(m_nNumCtrlPoints - deg);
 
-	for (int i=0; i<m_nNumPoints+ORDER; i++)
+	for (int i=0; i<m_nNumCtrlPoints+ORDER; i++)
 	{
 		if (i < (ORDER)) m_pKnots[i] = 0.0f;
-		else if(i > deg && i < m_nNumPoints) m_pKnots[i] = float(i-deg);///(m_nNumPoints-deg);
+		else if(i > deg && i < m_nNumCtrlPoints) m_pKnots[i] = float(i-deg);///(m_nNumCtrlPoints-deg);
 		else m_pKnots[i] = max;//1.0f;
 
-		//m_pKnots[i] = double((i-deg))/(m_nNumPoints-deg);
+		//m_pKnots[i] = double((i-deg))/(m_nNumCtrlPoints-deg);
 	}
 
-	/*int numKnots = m_nNumPoints + ORDER;
+	/*int numKnots = m_nNumCtrlPoints + ORDER;
 
 	for (int i=0; i <numKnots; i++) 
 	{
 		/*if (i<ORDER) knotVector[i] = 0.0;
 		else if (i>DEGREE && i<NumControlPoints) knotVector[i] = double((i-DEGREE))/(NumControlPoints-DEGREE);
 		else  knotVector[i] = 1.0;
-		m_pKnots[i] = double((i-DEGREE))/(m_nNumPoints-DEGREE);
+		m_pKnots[i] = double((i-DEGREE))/(m_nNumCtrlPoints-DEGREE);
 	}*/
 }
 

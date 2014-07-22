@@ -115,13 +115,13 @@ public:
 	/**
 	 *	Translation operator.
 	 *		
-	 *	@param vec CVector2D, whose componets are use to translate a CPoint f in x and y-direction respectively.
+	 *	@param point CPointf, to be subtracted from this CPointf.
 	 *
-	 *	@return The translated point as CVector2D.
+	 *	@return The resulting CVector2D.
 	 *
 	 */
-	__inline CVector2D operator - (const CPointf p) const {
-		return CVector2D(x-p.x, y-p.y);
+	__inline CVector2D operator - (const CPointf point) const {
+		return CVector2D(x-point.x, y-point.y);
 	}
 
 	/**
@@ -179,6 +179,11 @@ public:
 		return CVector2D(point.x, point.y);
 	}
 
+	/**
+	 *	Converts this CPointf to CVector2D.
+	 *
+	 *	@return The corresponding CVector2D.
+	 */
 	__inline CVector2D toVector2D() const {
 		return CVector2D(x,y);
 	}
@@ -194,16 +199,15 @@ public:
 		return CPointf(vec.x, vec.y);
 	}
 
-#ifdef WIN32
+	/**
+	 *	Retrieve a textual representation of this CPointf.
+	 *
+	 *	@return A CString with the comma-separated x and y components.
+	 */
 	__inline CString ToString() const {
 		CString str;
 		str.Format(_T("%f,%f"), x, y);
 		return str;		
 	}
-#else
-	__inline string ToString() const {
-		//TODO
-	}
-#endif
 };
 

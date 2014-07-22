@@ -65,6 +65,16 @@ const CFlowIllustratorView::EDIT_MODE FlowToolEditMode [] =
 	CFlowIllustratorView::EM_ELLIPSE,
 };
 
+const DWORD LineStyle [] =
+{
+	SL_THICKNESS_CONST,
+	SL_TRIANGLE,
+	SL_ARROW,
+	SL_DASHED,
+	SL_DROPLET,
+	SL_ELLIPSE,
+};
+
 // CMainFrame
 
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWndEx)
@@ -145,6 +155,14 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_RIBBON_STREAMLINE_STEP_LEN, &CMainFrame::OnRibbonStreamLineStepLen)
 	ON_COMMAND(ID_RIBBON_STREAMLINE_ARROW_SIZE, &CMainFrame::OnRibbonStreamLineArrowSize)
 	ON_COMMAND(ID_RIBBON_STREAMLINE_SMOOTHNESS, &CMainFrame::OnRibbonStreamLineSmoothness)
+	ON_COMMAND(ID_RIBBON_STREAMLINE_ISSTREAMLET, &CMainFrame::OnRibbonStreamlineIsstreamlet)
+	ON_COMMAND(ID_RIBBON_STREAMLINE_HALOCOLOR, &CMainFrame::OnRibbonStreamlineHalocolor)
+	ON_COMMAND(ID_RIBBON_STREAMLINE_ARROW_COLOR, &CMainFrame::OnRibbonStreamlineArrowColor)
+	ON_COMMAND(ID_RIBBON_STREAMLINE_NUMSTREAMLETS, &CMainFrame::OnRibbonStreamlineNumstreamlets)
+	ON_COMMAND(ID_RIBBON_STREAMLINE_STYLE, &CMainFrame::OnRibbonStreamlineStyle)
+	ON_UPDATE_COMMAND_UI(ID_RIBBON_STREAMLINE_SHOW_ARROWS, &CMainFrame::OnUpdateRibbonStreamlineShowArrows)
+	ON_UPDATE_COMMAND_UI(ID_RIBBON_STREAMLINE_ISSTREAMLET, &CMainFrame::OnUpdateRibbonStreamlineIsstreamlet)
+	
 
 	ON_COMMAND(ID_RIBBON_PATHLINE_COLOR, &CMainFrame::OnRibbonPathLineColor)
 	ON_COMMAND(ID_RIBBON_PATHLINE_THICKNESS, &CMainFrame::OnRibbonPathLineThickness)
@@ -166,7 +184,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_RIBBON_STREAKLINE_ARROW_SIZE, &CMainFrame::OnRibbonStreakLineArrowSize)
 	ON_COMMAND(ID_RIBBON_STREAKLINE_SMOOTHNESS, &CMainFrame::OnRibbonStreakLineSmoothness)
 
-	ON_UPDATE_COMMAND_UI(ID_RIBBON_STREAMLINE_SHOW_ARROWS, &CMainFrame::OnUpdateRibbonStreamlineShowArrows)
+
+
+
 	ON_COMMAND(ID_RIBBON_ARROW_SIZE, &CMainFrame::OnRibbonArrowSize)
 	ON_COMMAND(ID_RIBBON_VORTEX_SNAP_TO_CORE, &CMainFrame::OnRibbonVortexSnapToCore)
 	ON_COMMAND(ID_RIBBON_RESET_VIEWPORT, &CMainFrame::OnRibbonResetViewport)
@@ -199,15 +219,15 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_RIBBON_PATHLINE_STARTFRAME, &CMainFrame::OnRibbonPathlineStartframe)
 	ON_COMMAND(ID_RIBBON_PATHLINE_USE_STARTFRAME, &CMainFrame::OnRibbonPathlineUseStartframe)
 	ON_UPDATE_COMMAND_UI(ID_RIBBON_PATHLINE_USE_STARTFRAME, &CMainFrame::OnUpdateRibbonPathlineUseStartframe)
-	ON_COMMAND(ID_RIBBON_STREAMLINE_ISSTREAMLET, &CMainFrame::OnRibbonStreamlineIsstreamlet)
-	ON_UPDATE_COMMAND_UI(ID_RIBBON_STREAMLINE_ISSTREAMLET, &CMainFrame::OnUpdateRibbonStreamlineIsstreamlet)
+	
+	
 	ON_COMMAND(ID_RIBBON_PATHLINE_ISPATHLET, &CMainFrame::OnRibbonPathlineIspathlet)
 	ON_UPDATE_COMMAND_UI(ID_RIBBON_PATHLINE_ISPATHLET, &CMainFrame::OnUpdateRibbonPathlineIspathlet)
-	ON_COMMAND(ID_RIBBON_STREAMLINE_HALOCOLOR, &CMainFrame::OnRibbonStreamlineHalocolor)
+	
 	ON_COMMAND(ID_RIBBON_PATHLINE_HALOCOLOR, &CMainFrame::OnRibbonPathlineHalocolor)
 	ON_COMMAND(ID_RIBBON_VORTEX_HALOCOLOR, &CMainFrame::OnRibbonVortexHalocolor)
 	ON_COMMAND(ID_RIBBON_VORTEX_ARROW_COLOR, &CMainFrame::OnRibbonVortexArrowColor)
-	ON_COMMAND(ID_RIBBON_STREAMLINE_ARROW_COLOR, &CMainFrame::OnRibbonStreamlineArrowColor)
+	
 	ON_COMMAND(ID_RIBBON_PATHLINE_ARROW_COLOR, &CMainFrame::OnRibbonPathlineArrowColor)
 	ON_COMMAND(ID_RIBBON_SHOW_OBJECTS_WINDOW, &CMainFrame::OnRibbonShowObjectsWindow)
 	ON_COMMAND(ID_RIBBON_STREAKLINE_HALOCOLOR, &CMainFrame::OnRibbonStreaklineHalocolor)
@@ -244,11 +264,14 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_RIBBON_SPEEDLINE_THICKNESS_MIN, &CMainFrame::OnRibbonSpeedlineThicknessMin)
 	ON_COMMAND(ID_RIBBON_SPEEDLINE_TIMESTEPS, &CMainFrame::OnRibbonSpeedlineTimesteps)
 	ON_COMMAND(ID_RIBBON_SPEEDLINE_SMOOTH, &CMainFrame::OnRibbonSpeedlineSmooth)
-	ON_COMMAND(ID_RIBBON_STREAMLINE_NUMSTREAMLETS, &CMainFrame::OnRibbonStreamlineNumstreamlets)
+	
 	ON_COMMAND(ID_RIBBON_PATHLINE_NUMPATHLETS, &CMainFrame::OnRibbonPathlineNumpathlets)
 	ON_COMMAND(ID_RIBBON_STREAKLINE_ISSTREAKLET, &CMainFrame::OnRibbonStreaklineIsstreaklet)
 	ON_UPDATE_COMMAND_UI(ID_RIBBON_STREAKLINE_ISSTREAKLET, &CMainFrame::OnUpdateRibbonStreaklineIsstreaklet)
 	ON_COMMAND(ID_RIBBON_STREAKLINE_NUMSTREAKLETS, &CMainFrame::OnRibbonStreaklineNumstreaklets)
+	
+	ON_COMMAND(ID_RIBBON_STREAKLINE_STYLE, &CMainFrame::OnRibbonStreaklineStyle)
+	ON_COMMAND(ID_RIBBON_PATHLINE_STYLE, &CMainFrame::OnRibbonPathlineStyle)
 	END_MESSAGE_MAP()
 
 // CMainFrame construction/destruction
@@ -2974,4 +2997,45 @@ void CMainFrame::OnUpdateRibbonEllipseHatched(CCmdUI *pCmdUI)
 void CMainFrame::OnUpdateRibbonTriangleHatched(CCmdUI *pCmdUI)
 {
 	pCmdUI->SetCheck(m_bTriangleHatched);
+}
+
+void CMainFrame::OnRibbonStreamlineStyle()
+{
+	CMFCRibbonGallery *pWnd = reinterpret_cast<CMFCRibbonGallery*>(m_wndRibbonBar.FindByID(ID_RIBBON_STREAMLINE_STYLE, FALSE));
+	if ( pWnd )
+	{
+		DWORD dwStyle = LineStyle[ pWnd->GetSelectedItem() ];
+
+		CDrawingObjectParams params (DO_STREAMLINE);
+		params.SetValue( DOP_SPEEDLINE_STYLE, static_cast<UINT>(dwStyle));
+		_objectPropertyChanged(&params);
+	}
+}
+
+
+void CMainFrame::OnRibbonStreaklineStyle()
+{
+	CMFCRibbonGallery *pWnd = reinterpret_cast<CMFCRibbonGallery*>(m_wndRibbonBar.FindByID(ID_RIBBON_STREAKLINE_STYLE, FALSE));
+	if ( pWnd )
+	{
+		DWORD dwStyle = LineStyle[ pWnd->GetSelectedItem() ];
+
+		CDrawingObjectParams params (DO_STREAKLINE);
+		params.SetValue( DOP_SPEEDLINE_STYLE, static_cast<UINT>(dwStyle));
+		_objectPropertyChanged(&params);
+	}
+}
+
+
+void CMainFrame::OnRibbonPathlineStyle()
+{
+	CMFCRibbonGallery *pWnd = reinterpret_cast<CMFCRibbonGallery*>(m_wndRibbonBar.FindByID(ID_RIBBON_PATHLINE_STYLE, FALSE));
+	if ( pWnd )
+	{
+		DWORD dwStyle = LineStyle[ pWnd->GetSelectedItem() ];
+
+		CDrawingObjectParams params (DO_PATHLINE);
+		params.SetValue( DOP_SPEEDLINE_STYLE, static_cast<UINT>(dwStyle));
+		_objectPropertyChanged(&params);
+	}
 }

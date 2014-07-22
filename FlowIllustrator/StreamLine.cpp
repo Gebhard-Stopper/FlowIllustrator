@@ -57,6 +57,7 @@ CStreamLine::CStreamLine(const CDrawingObjectParams &params)
 CStreamLine::CStreamLine(DrawingObjectType nType)
 	:CPolyLine(CRectF(0.0f, 0.0f, 0.0f, 0.0f), dummyColor, nType)
 {
+	SetDropletCount(5);
 }
 
 void CStreamLine::Init(unsigned int nNumIntegrationSteps, float fStepLength)
@@ -73,6 +74,7 @@ void CStreamLine::Init(unsigned int nNumIntegrationSteps, float fStepLength)
 	SetSmoothness(0);
 
 	DrawAsDroplet(false);
+	SetDropletCount(5);
 	UseFixedStartFrame(false);
 }
 
@@ -90,7 +92,7 @@ void CStreamLine::Draw()
 
 	CPolyLine::Draw(bDrawAsDroplet);
 
-	if (!bDrawAsDroplet)
+	if ( (GetStyle() & 0xFFFF00 >> 8) == SL_THICKNESS_CONST )
 	{
 		if (m_Points.size() > 0) 
 		{

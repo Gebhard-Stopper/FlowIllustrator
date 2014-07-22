@@ -28,7 +28,11 @@
 #pragma once
 
 
-// COpenGlDummyWnd
+/**
+ *	This class serves the only purpose to nintialize a dummy OpenGL context
+ *	in order to setup multisampling for the main application window by 
+ *	choosing an appropriate pixel format, using wglChoosePixelFormatARB.
+ */
 
 class COpenGlDummyWnd : public CWnd
 {

@@ -298,6 +298,7 @@
     <None Include="gpl.txt" />
     <None Include="ReadMe.txt" />
     <None Include="res\bitmap1.bmp" />
+    <None Include="res\bitmap2.bmp" />
     <None Include="res\bullseye_xor.cur" />
     <None Include="res\buttons.bmp" />
     <None Include="res\copy4way.cur" />
@@ -307,6 +308,7 @@
     <None Include="res\FlowIllustrator.rc2" />
     <None Include="res\FlowIllustratorDoc.ico" />
     <None Include="res\FlowTools.bmp" />
+    <None Include="res\linestyles.bmp" />
     <None Include="res\main.bmp" />
     <None Include="res\nav_large.bmp" />
     <None Include="res\nav_large_hc.bmp" />

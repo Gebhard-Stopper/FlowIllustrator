@@ -77,9 +77,27 @@ protected:
 	 **/
 	virtual void GetParams(CDrawingObjectParams &params) const; 
 
+	/**
+	 *	Override that ensures that the parameters are stored in m_SpeedLineParams as default parameters for new speed lines.
+	 */
 	virtual bool SetChildObjParams(const CDrawingObjectParams &params);
 
+	/**
+	 *	Set one or more parameters to a CDrawingObject.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
+	 *
+	 *	@see CDrawingObject::setParam()
+	 */
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
+
+	/**
+	 *	CTimeLine speciffic override.
+	 */
 	virtual void OnSetParams();
 
 public:
@@ -163,18 +181,44 @@ public:
 		return m_pParams->GetValueBool(DOP_SHOWTRAJECTORY);
 	}
 
+	/**
+	 *	Set if the seeding line of this CTimeLine is to be drawn.
+	 *
+	 * @param bDraw Set this to true to draw the seeding line.
+	 */
 	__inline void DrawSeedingLine(bool bDraw) {
 		m_pParams->SetValue(DOP_SHOW_SEEDINGLINE, bDraw);
 	}
 
+	/**
+	 *	Retrieve if the seeding line of this CTimeLine is to be drawn.
+	 *
+	 * @return Returns true, if the seeding line is drawn, otherwise false.
+	 */
 	__inline bool DrawSeedingLine() const {
 		return m_pParams->GetValueBool(DOP_SHOW_SEEDINGLINE);
 	}
 
+	/**
+	 *	Get an exact copy of this CTimeLine object.
+	 *
+	 *	@return A pointer the the new CTimeLine object.
+	 */
 	virtual CDrawingObject* Duplicate() const;
 
+	/** 
+	 *	Add a new CSpeedLine as trajectory.
+	 *
+	 *	@param pTrajectory A pointer to a CSpeedLine object.
+	 *
+	 *	@remarks	This CTimeLine object takes control of the supplied CSpeedLine and deletes it if no longer needed.
+	 *				Do not delete the Supplied CSpeedLine yourself.
+	 */
 	void AddTrajectory(CSpeedLine *pTrajectory);
 
+	/**
+	 *	Draw this CTimeLine.
+	 */
 	virtual void Draw();
 
 	friend class CSVGConverter;

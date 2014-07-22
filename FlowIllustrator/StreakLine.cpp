@@ -78,6 +78,11 @@ bool CStreakLine::setParam(DrawinObjectParamName paramID, const CSimpleVariant &
 
 void CStreakLine::Draw()
 {
+	if ( !RenderAsParticles() ) {
+		CPathLine::Draw();
+		return;
+	}
+
 	float thickness = GetThickness();
 	floatColor color = GetColor();
 
@@ -90,26 +95,11 @@ void CStreakLine::Draw()
 	SetThickness(thickness);
 	SetColor(color);
 	_draw();
-
-	if (m_Points.size() > 0 && !DrawAsDroplet()) 
-	{
-		if (ShowArrows()) {
-			DrawArrows();
-			for (auto iter = m_Arrows.begin();iter < m_Arrows.end(); iter++) {
-				iter->Draw();
-			}
-		}
-	}
 }
 
 void CStreakLine::_draw()
 {
-	if (DrawAsDroplet()) {
-		CPolyLine::Draw(DrawAsDroplet());
-		return;
-	} else {
-		CDrawingObject::Draw();
-	}
+	CDrawingObject::Draw();
 
 	glPointSize(GetThickness());
 
@@ -119,7 +109,7 @@ void CStreakLine::_draw()
 	if (m_Points.size() > 0) {
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, &m_Points[0]);
-		glDrawArrays( (RenderAsParticles())? GL_POINTS : GL_LINE_STRIP, 0, m_Points.size());
+		glDrawArrays(  GL_POINTS, 0, m_Points.size());
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 

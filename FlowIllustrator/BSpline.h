@@ -37,17 +37,14 @@
 class CBSpline :
 	public CDrawingObject
 {
-protected:
-	//CBSpline() : CDrawingObject(CRectF(0.0f, 0.0f, 0.0f, 0.0f), DO_BSPLINE) {}
-
 public:
 	CBSpline(int numPoints, const floatColor& color);
 	~CBSpline(void);
 
 public:
-	int			 m_nNumPoints;	//Number of control points (n)
-	CPointf		*m_pPoints;		//deBoor points
-	float		*m_pKnots;		//knot vector
+	int			 m_nNumCtrlPoints;	/**< Number of control points. */
+	CPointf		*m_pPoints;			/**< Pointer to an array of CPointf, holding the deBoor points. */
+	float		*m_pKnots;			/**< Pointer to an array of float, holding the knot vector. */
 
 public:
 	virtual void Draw();
@@ -61,6 +58,17 @@ public:
 	void CalcKnotVector();
 
 protected:
+	/**
+	 *	Set one or more parameters to a CDrawingObject.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
+	 *
+	 *	@see CDrawingObject::setParam()
+	 */
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 	virtual void _OnParamsChanged() {}
 

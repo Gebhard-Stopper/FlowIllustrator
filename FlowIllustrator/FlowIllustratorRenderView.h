@@ -61,7 +61,6 @@ protected:
 	int			m_yMin;						/**< Offset in pixels in Y-direction. Used to center the displayed image vertically. */
 
 	float		m_xyRatio;					/**< Width/height ratio of the extents (m_xExtent/m_yExtent). */
-	//float		m_fZoomScale;				/**< Current zoom factor. */
 	float		m_fPixelUnitRatioX;			/**< Pixels per domain unit in X-direction. */
 	float		m_fPixelUnitRatioY;			/**< Pixels per domain unit in Y-direction. */
 

@@ -65,7 +65,7 @@ public:
 	 *	Construct a new CRectF object.
 	 *
 	 *	@param ptMin The lower-left edge.
-	 *	@param ptMaxThe lower-left edge.
+	 *	@param ptMax The lower-left edge.
 	 */
 	CRectF (const CPointf &ptMin, const CPointf &ptMax)
 		: m_Min(CVector2D(ptMin.x, ptMin.y)), m_Max(CVector2D(ptMax.x, ptMax.y)), m_fRotation(0.0f) {}

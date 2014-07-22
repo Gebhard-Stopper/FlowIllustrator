@@ -64,6 +64,18 @@ public:
 
 protected:
 	virtual void GetParams(CDrawingObjectParams &params) const; 
+
+	/**
+	 *	Set one or more parameters to a CDrawingObject.
+	 *
+	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
+	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
+	 *	
+	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
+	 *				set correctly.
+	 *
+	 *	@see CDrawingObject::setParam()
+	 */
 	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 	virtual void OnSetParams();
 

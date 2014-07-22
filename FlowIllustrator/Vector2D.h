@@ -202,8 +202,8 @@ public: //Operators
 	 *
 	 *	@return	The result of the division.
 	 */
-	__inline CVector2D operator /(float f) const{
-		return CVector2D(x / f, y / f);
+	__inline CVector2D operator /(float val) const{
+		return CVector2D(x / val, y / val);
 	}
 
 	/**
@@ -264,28 +264,28 @@ public: //Operators
 	 *	@brief Index operator.
 	 *	Allows to access the values of the vector in an index based manner.
 	 *
-	 *	@param vec Zero-based index of the component whose value is to be accessed.
+	 *	@param indx Zero-based index of the component whose value is to be accessed.
 	 *
 	 *	@return	A copy of the value at the specified index.
 	 *
 	 *	@remarks Valid values for an index are only {0, 1}. Other values will cause undefined behaviour.
 	 */
-	__inline float operator [] (int i) const {
-		return *(reinterpret_cast<const float*>(this)+i);
+	__inline float operator [] (int indx) const {
+		return *(reinterpret_cast<const float*>(this)+indx);
 	}
 
 	/**
 	 *	@brief Index operator.
 	 *	Allows to access the values of the vector in an index based manner.
 	 *
-	 *	@param vec Zero-based index of the component whose value is to be accessed.
+	 *	@param indx Zero-based index of the component whose value is to be accessed.
 	 *
 	 *	@return	A refernece to the value at the specified index.
 	 *
 	 *	@remarks Valid values for an index are only {0, 1}. Other values will cause undefined behaviour.
 	 */
-	__inline float& operator [] (int i) {
-		return *(reinterpret_cast<float*>(this)+i);
+	__inline float& operator [] (int indx) {
+		return *(reinterpret_cast<float*>(this)+indx);
 	}
 
 public:

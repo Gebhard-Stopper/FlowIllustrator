@@ -111,6 +111,12 @@
     <None Include="shaders\ColCode.glsl">
       <Filter>shaders</Filter>
     </None>
+    <None Include="res\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\linestyles.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FlowIllustrator.h">

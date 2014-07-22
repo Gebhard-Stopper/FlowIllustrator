@@ -115,6 +115,7 @@ enum DrawinObjectParamName
 	DOP_NUMDROPLETS,
 	DOP_GROW_STEPS,
 	DOP_TRANSPARENT_STEPS,
+	DOP_LINESTYLE,
 };
 
 /**
@@ -159,6 +160,13 @@ public:
 		childParams.reset();
 	}
 
+	/**
+	 *	Copies the parameters of the supplied CDrawingObjectParams object into this CDrawingObjectParams object.
+	 *
+	 *	@param src Reference to a CDrawingObjectParams object, whose parameters are copied.
+	 *
+	 *	@remarks Any parameters held by this object are deleted, before the new parameters are copied.
+	 */
 	__inline CDrawingObjectParams& operator = (const CDrawingObjectParams &src) {
 		Clear();
 		dataMap.insert(src.dataMap.begin(), src.dataMap.end());
@@ -234,6 +242,15 @@ public:
 		return 0;
 	}
 
+	/**
+	 *	Retrieve the value associated to a DrawinObjectParamName.
+	 *
+	 *	@param key The DrawinObjectParamName whose value is to be obtained.
+	 *
+	 *	@return The uiVal of the associated CSimpleVariant.
+	 *
+	 *	@see CSimpleVariant
+	 */
 	__inline unsigned int GetValueUInt(DrawinObjectParamName key) const {
 		static CSimpleVariant buffer;
 		if (GetValue(key, buffer)) {
@@ -318,6 +335,17 @@ public:
 		return floatColor(0,0,0);
 	}
 
+	/**
+	 *	Retrieve a reference to the color value associated to a DrawinObjectParamName.
+	 *
+	 *	@param key The DrawinObjectParamName whose value is to be obtained.
+	 *
+	 *	@return A reference to the color value of the associated CSimpleVariant.
+	 *
+	 *	@remarks If the value of the associated CSimpleVariat is not of type floatColor, the returned value is undefined.
+	 *
+	 *	@see CSimpleVariant
+	 */
 	__inline const floatColor& GetValueFloatColor_r(DrawinObjectParamName key) const {
 		static const floatColor error_col(0,0,0);
 
@@ -348,6 +376,17 @@ public:
 		return CPointf(0,0);
 	}
 
+	/**
+	 *	Retrieve a reference to the CPointf value associated to a DrawinObjectParamName.
+	 *
+	 *	@param key The DrawinObjectParamName whose value is to be obtained.
+	 *
+	 *	@return A reference to the point momber of the associated CSimpleVariant.
+	 *
+	 *	@remarks If the value of the associated CSimpleVariat is not of type CPointf, the returned value is undefined.
+	 *
+	 *	@see CSimpleVariant
+	 */
 	__inline const CPointf& GetValuePointf_r(DrawinObjectParamName key) const {
 		static const CPointf error_pt(0,0);
 
@@ -513,8 +552,8 @@ public:
 class CDONames
 {
 protected:
-	CNameMapping	m_TypeNames;	//*< Mapping from string to DrawingObjectType, and wise versa. */
-	CNameMapping	m_ParamNames;	//*< Mapping from string to DrawinObjectParamName, and wise versa. */
+	CNameMapping	m_TypeNames;	/**< Mapping from string to DrawingObjectType, and wise versa. */
+	CNameMapping	m_ParamNames;	/**< Mapping from string to DrawinObjectParamName, and wise versa. */
 
 public:
 	/**
@@ -523,7 +562,6 @@ public:
 	 */
 	void Init();	
 
-#ifdef WIN32
 	/**
 	 *	Retrieve the CString name, of a DrawingObjectType.
 	 *
@@ -559,13 +597,6 @@ public:
 	 *	@return The DrawinObjectParamName belonging the the supplied name.
 	 */
 	DrawinObjectParamName GetParam(const CString &strName) const;
-#else
-	string GetTypeName(DrawingObjectType nType) const;
-	DrawingObjectType GetType(const string& strName) const;
-
-	string GetParamName(DrawinObjectParamName nParam) const;
-	DrawinObjectParamName GetParam(const string &strName) const;
-#endif
 };
 
 extern CDONames DrawingObjNames;
