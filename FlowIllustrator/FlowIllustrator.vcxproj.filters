@@ -19,6 +19,9 @@
     <Filter Include="FolderDlg">
       <UniqueIdentifier>{c8f42365-2d20-4a6b-8015-30c0bfe55328}</UniqueIdentifier>
     </Filter>
+    <Filter Include="documentation">
+      <UniqueIdentifier>{a803c25f-0cdc-4944-a2fe-a1b9c6790656}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -116,6 +119,18 @@
     </None>
     <None Include="res\linestyles.bmp">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="documentation\linestyles.dox">
+      <Filter>documentation</Filter>
+    </None>
+    <None Include="documentation\mainpage.dox">
+      <Filter>documentation</Filter>
+    </None>
+    <None Include="documentation\DataModel.dox">
+      <Filter>documentation</Filter>
+    </None>
+    <None Include="documentation\tutorials.dox">
+      <Filter>documentation</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

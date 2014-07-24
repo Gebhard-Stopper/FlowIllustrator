@@ -1,0 +1,21 @@
+/**
+ *	\page pLineStyles Creating line styles
+ *
+ *	FlowIllustrator supports illustrative line styles, similar to those proposed by Everts et al. (http://tobias.isenberg.cc/personal/papers/Everts_2011_ILF.pdf).
+ *	To create additional line styles, you can follow these three steps:
+ *	\subsection Identifyer Define a new identifyer
+ *		Define a new identifyer for your line style in PolyLine.h, similar to this:
+ *		const DWORD SL_DASHED					= 0x040; <BR>
+ *		Typically, one can use a value, that is greater than the greates value currently used. Be sure, to assign it at least a value that is greater than 0xFF, however.
+ *	\subsection Implementation Implement your new line style
+ *		The next step is to extend the implementation of CPolyLine::_calcThickness() in PolyLine.cpp. Therefore, add your idenifyer to
+ *		the switch-case statement, and add your implementation. Be sure to not directly return a value. Instead, assign your calculated thickness to 
+ *		retVal and leave the switch-case statement. This way, CPolyLine::_calcThickness() ensures the returned value is mapped into the domain space of
+ *		the currently opened vector field.
+ *	\subsection MakeAvailable Make your line style available to the user.
+ *		To make your new line style available to the users, you have to perform two small steps:
+ *		-# Append your identifyer to the end of the LineStyle-array at the top of MainFrm.cpp.
+ *		-# Create a screenshot of your new linestyle and append it to right-hand side of linestyles.bmp, located in the /res folder. The screenshot has to be 127 x 35 pixel.
+ *
+ *	@see CPolyLine
+ */

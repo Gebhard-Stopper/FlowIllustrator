@@ -7,13 +7,13 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+
 
 # Compiled Static libraries
 *.lai
 *.la
 *.a
-*.lib
+
 
 # Executables
 *.exe
@@ -23,14 +23,6 @@
 #sources from other people
 Markup.cpp
 Markup.h
-
-#exclude external libraries
-/armadillo-3.920.2
-/BLAS
-/freeglut
-/glew-1.10.0
-/LAPACK
-/libmsvg
 
 #exclude documentation
 /*/html
