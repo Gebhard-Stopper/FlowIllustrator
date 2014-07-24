@@ -36,16 +36,27 @@ Markup.h
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
-x64/
 x86/
 build/
 bld/
 [Bb]in/
 [Oo]bj/
+
+#debug-info
+*.tlog
+*.manifest*
+[Dd]ebug/*.rc
+*.lastbuildstate
+*.unsuccessfulbuild
+*.idb
+*/[Dd]ebug/*.rc
+*/*/[Dd]ebug/*.res
+*/[Dd]ebug/*.res
+*.zip
+*.am
+*.svg
 
 # Roslyn cache directories
 *.ide/
