@@ -31,7 +31,7 @@
 
 
 CDrawingObject::CDrawingObject(const CRectF& BBox, DrawingObjectType type, const floatColor& color)
-	:  m_pParams(new CDrawingObjectParams), m_bSelected(false), m_pParent(nullptr)
+	:  m_pParams(new CDrawingObjectParams)
 {
 	_init(type);
 
@@ -40,7 +40,7 @@ CDrawingObject::CDrawingObject(const CRectF& BBox, DrawingObjectType type, const
 }
 
 CDrawingObject::CDrawingObject(DrawingObjectType type)
-	: m_pParams(new CDrawingObjectParams), m_pParent(nullptr)
+	: m_pParams(new CDrawingObjectParams)
 {
 	_init(type);
 	SetColor(floatColor(0.0f, 0.0f, 0.0f));
@@ -55,6 +55,8 @@ void CDrawingObject::_init(DrawingObjectType type)
 	DrawStippled(false);
 	SetThickness(1.5f);
 	SetHaloColor(floatColor(1.0f, 1.0f, 1.0f));
+	m_bSelected = false;
+	m_pParent = nullptr;
 }
 
 CDrawingObject::~CDrawingObject(void)

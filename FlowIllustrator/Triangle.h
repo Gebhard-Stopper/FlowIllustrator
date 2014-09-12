@@ -27,18 +27,21 @@
 
 #pragma once
 #include "drawingobject.h"
+#include <vector>
 
-
+using namespace std;
 
 class CTriangle :
 	public CDrawingObject
 {
 public:
 	CTriangle(const CRectF &rect, const floatColor& color);
+	CTriangle(const CDrawingObjectParams& params);
+
 	virtual ~CTriangle(void);
 
 private:
-	GLfloat *m_pVertBuff;	//Vertex buffer object
+	vector<CPointf> m_Vertices;	//Vertex buffer object
 
 public:
 	virtual void Draw();
@@ -55,34 +58,26 @@ public:
 	virtual __inline void SetRect(const CRectF& rect) { 
 		CDrawingObject::SetRect(rect);
 
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[0] = CVector2D(rect.m_Min.x, rect.m_Min.y + rect.getHeight()/2.0f);
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[1] = CVector2D(rect.m_Max.x, rect.m_Min.y);
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[2] = CVector2D(rect.m_Max.x, rect.m_Max.y);
+		m_Vertices[0] = CPointf(rect.m_Min.x, rect.m_Min.y + rect.getHeight()/2.0f);
+		m_Vertices[1] = CPointf(rect.m_Max.x, rect.m_Min.y);
+		m_Vertices[2] = CPointf(rect.m_Max.x, rect.m_Max.y);
 
 		_OnParamsChanged();
 	}
 
+	vector<CPointf>* GetDataPoints() {
+		return& m_Vertices;
+	}
+
 protected:
 	virtual void GetParams(CDrawingObjectParams &params) const; 
-
-	/**
-	 *	Set one or more parameters to a CDrawingObject.
-	 *
-	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
-	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
-	 *	
-	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
-	 *				set correctly.
-	 *
-	 *	@see CDrawingObject::setParam()
-	 */
-	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
 	virtual void OnSetParams();
 
 private:
 	CPointf _getCenter() const;
 	void _calcGlVertexPos();
 	void _draw();
+	void _initVertexBuffer();
 
 protected:
 	virtual void _OnParamsChanged();

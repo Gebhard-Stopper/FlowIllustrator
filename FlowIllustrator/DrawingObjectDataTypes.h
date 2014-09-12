@@ -65,6 +65,7 @@ typedef enum DrawingObjectType {
  */
 enum DrawinObjectParamName 
 {
+	DOP_INVALID,
 	DOP_TYPE,
 	DOP_COLOR,
 	DOP_COLOR_SEL,
@@ -76,6 +77,8 @@ enum DrawinObjectParamName
 	DOP_WIDTH,
 	DOP_HEIGHT,
 	DOP_CENTER,
+	DOP_CENTER_X,
+	DOP_CENTER_Y,
 	DOP_DRAW_STIPPLED,
 	DOP_INTEGRATIONSTEPS,
 	DOP_STEPLENGTH,
@@ -116,6 +119,18 @@ enum DrawinObjectParamName
 	DOP_GROW_STEPS,
 	DOP_TRANSPARENT_STEPS,
 	DOP_LINESTYLE,
+};
+
+enum DrawinObjectParamType
+{
+	DOT_INVALID,
+	DOT_INTEGER,
+	DOT_UNSIGNED_INTEGER,
+	DOT_BOOLEAN,
+	DOT_FLOAT,
+	DOT_POINT,
+	DOT_VECTOR,
+	DOT_COLOR,
 };
 
 /**
@@ -186,6 +201,16 @@ public:
 		return (dataMap.find(key) != dataMap.end());
 	}
 
+	__inline bool RemoveValue(DrawinObjectParamName key) {
+		auto pos = dataMap.find(key);
+		if ( pos != dataMap.end() ) {
+			dataMap.erase(pos);
+			return true;
+		}
+
+		return false;
+	}
+
 	/**
 	 *	Set a DrawinObjectParamName/value pair.
 	 *
@@ -222,6 +247,27 @@ public:
 			return true;
 		}
 
+		return false;
+	}
+
+	/**
+	 *	Retrieve the value associated to a DrawinObjectParamName and remove it from the mapping.
+	 *
+	 *	@param key The DrawinObjectParamName whose value is to be obtained.
+	 *	@param val Reference to a CSimpleVariant to receive the stored value.
+	 *
+	 *	@return If the supplied key is not present in the map, this function returns false and the value in val is unspecified.
+				Otherwise, the return value is true and val contains the associated value.
+	 *
+	 *	@see CSimpleVariant
+	 */
+	__inline bool popValue(DrawinObjectParamName key, CSimpleVariant &val) {
+		auto pos = dataMap.find(key);
+		if ( pos != dataMap.end() ) {
+			val = (*pos).second;
+			dataMap.erase(pos);
+			return true;
+		}
 		return false;
 	}
 
@@ -478,6 +524,10 @@ public:
 		revMap.insert( pair<string, int> (sVal, iVal) );
 	}
 
+	__inline void AddAlternative(int iVal, string sVal) {
+		revMap.insert( pair<string, int> (sVal, iVal) );
+	}
+
 #ifdef WIN32
 	/**
 	 *	Retrieve the string associated to an int key.
@@ -552,8 +602,9 @@ public:
 class CDONames
 {
 protected:
-	CNameMapping	m_TypeNames;	/**< Mapping from string to DrawingObjectType, and wise versa. */
-	CNameMapping	m_ParamNames;	/**< Mapping from string to DrawinObjectParamName, and wise versa. */
+	CNameMapping		m_TypeNames;		/**< Mapping from string to DrawingObjectType, and wise versa. */
+	CNameMapping		m_ParamNames;		/**< Mapping from string to DrawinObjectParamName, and wise versa. */
+	hash_map<int, int>	m_ParamDataTypes;	
 
 public:
 	/**
@@ -561,6 +612,11 @@ public:
 	 *	All type-name mappings have to be included in this function.
 	 */
 	void Init();	
+
+	void RegisterParameter(DrawinObjectParamName nParamName, const CString& strParamName, DrawinObjectParamType nParamDataType);
+	void RegisterAlternativeName(DrawinObjectParamName nParamName, const CString& strParamName, DrawinObjectParamType nParamDataType);
+
+	DrawinObjectParamType GetParamDataType(DrawinObjectParamName nParamName) const;
 
 	/**
 	 *	Retrieve the CString name, of a DrawingObjectType.

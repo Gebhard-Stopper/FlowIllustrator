@@ -37,6 +37,7 @@
 #include "FlowIllustratorDoc.h"
 #include <cctype>
 
+
 CSVGConverter::CSVGConverter(void)
 {
 }
@@ -86,26 +87,34 @@ BOOL CSVGConverter::LoadSVG(const CString &strFileName, CDocument &document)
 {
 	CString strRealName;
 	BOOL bResult = FALSE;
-	hash_map<unsigned int, CDrawingObject*>	objCache;
-
-	
 
 	if (_checkFileName(strFileName, strRealName))
 	{
 		CFlowIllustratorDoc &doc = reinterpret_cast<CFlowIllustratorDoc&>(document);
 		CDrawingObjectMngr *pMngr = doc.GetDrawingObjectMngr();
+
 		doc.IsLoadingSVG( TRUE );
 
-		float fLinewidthFactor = _getLineWidthFactor(document);
-
-		CMarkup svgDoc;
-		bResult = svgDoc.SetDoc(strRealName);
+		CSimpleXML svgDoc;
+		bResult = svgDoc.LoadXML(strFileName);
 		if (bResult)
 		{
+			shared_ptr<CSimpleXMLNode> pRoot = svgDoc.GetRootNode();
 
-			if (svgDoc.FindElem(_T("svg")) ) //It is a SVG document
+			shared_ptr<CSimpleXMLNode> svgNode = pRoot->PopChildNode(_T("svg"));
+			if (svgNode)
 			{
-				doc.GotoFrame( _stepInside(svgDoc, *pMngr, objCache, fLinewidthFactor) );
+				shared_ptr<CSimpleXMLNode> transformNode = svgNode->PopChildNode(_T("g"));
+
+				if (transformNode)
+				{
+					shared_ptr<CSimpleXMLNode> timeStep = transformNode->PopChildNode(_T("timestep"));
+					CString strTimeStep = timeStep->strNodeValue;
+
+					_ReconstructObjects(transformNode, pMngr);
+
+					doc.GotoFrame( _tstoi(strTimeStep) );
+				}
 			}
 		}
 		doc.IsLoadingSVG( FALSE );
@@ -114,398 +123,295 @@ BOOL CSVGConverter::LoadSVG(const CString &strFileName, CDocument &document)
 	return bResult;
 }
 
-int CSVGConverter::_stepInside(CMarkup &doc, CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor)
+void CSVGConverter::_ReconstructObjects(shared_ptr<CSimpleXMLNode> objectNode, CDrawingObjectMngr *pMngr)
 {
-	doc.IntoElem();	//Step into;
-	int nFrameNo(0);
-
-	while (doc.FindChildElem())
-	{
-		CString strTag = doc.GetChildTagName().MakeLower();
-
-		if ( strTag == _T("g")) {
-			_stepInside(doc, dataContainer, objCache, fLinewidthFactor);
-		} else {
-			if (strTag == _T("timestep")) {
-				CString str = doc.GetChildData();
-				nFrameNo = _tstoi(str);
-			} else {
-				_addNewDrawingObject(doc, dataContainer, objCache, fLinewidthFactor);
-			}
-		}
-	}
-
-	doc.OutOfElem();
-
-	return nFrameNo;
-}
-
-void CSVGConverter::_addNewDrawingObject(CMarkup &doc, CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor)
-{
-	doc.IntoElem();
-
-	DrawingObjectType nObjType = _getDrawingObjectType(doc);
+	hash_map<unsigned int, CDrawingObject*>	objCache;
 	CDrawingObject *pNewObj;
 
-	switch(nObjType)
+	for (auto iter = objectNode->GetFirstChild(); iter != objectNode->GetLastChild(); ++iter)
 	{
-	case DO_TRIANGLE:
-		pNewObj = _getTriangle(doc);
-		pNewObj->SetThickness( pNewObj->GetThickness()*fLinewidthFactor);
-		break;
-	case DO_ELLIPSE:
-		pNewObj = _getEllipse(doc);
-		pNewObj->SetThickness( pNewObj->GetThickness()*fLinewidthFactor);
-		break;
-	case DO_RECTANGLE:
-		pNewObj = _getRectangle(doc);
-		pNewObj->SetThickness( pNewObj->GetThickness()*fLinewidthFactor);
-		break;
-	case DO_VORTEX:
-		pNewObj = _getVortex(doc);
-		break;
-	case DO_STREAMLINE:
-		pNewObj = _getStreamLine(doc);
-		break;
-	case DO_PATHLINE:
-		pNewObj = _getPathLine(doc);
-		break;
-	case DO_STREAKLINE:
-		pNewObj = _getStreakLine(doc);
-		break;
-	case DO_TIMELINE:
-		pNewObj = _getTimeLine(doc);
-		break;
-	case DO_SPEEDLINE:
-		pNewObj = _getSpeedLine(doc);
-		break;
-	default:
-		pNewObj = nullptr;
-	}
+		shared_ptr<CSimpleXMLAttribute> attrType		= (*iter)->PopAttribute( DrawingObjNames.GetParamName(DOP_TYPE) );
+		shared_ptr<CSimpleXMLAttribute> attrID			= (*iter)->PopAttribute(_T("id"));
+		shared_ptr<CSimpleXMLAttribute> attrParentID	= (*iter)->PopAttribute(_T("parent"));
+		
+		unsigned int nID( (attrID)? _extractHexAttrib(attrID->strAttribValue, 0) : 0 );
+		unsigned int parentID( (attrParentID)? _extractHexAttrib(attrParentID->strAttribValue, 0) : 0 );
 
-	//Rebuild object hierarchy and add the new object to the CDrawingObjectMngr 
-	if (pNewObj) 
-	{
-		unsigned int nID = _getHexAttrib(doc, _T("id"));
-		objCache.insert( pair<unsigned int, CDrawingObject*>(nID, pNewObj) );
+		if (attrType)
+		{
+			int nObjType (_tstoi(attrType->strAttribValue));
+			switch ( nObjType )
+			{
+			case DO_TRIANGLE:
+				pNewObj = _getTriangle( (*iter) ); break;
+			case DO_ELLIPSE:
+				pNewObj = _getEllipse( (*iter) ); break;
+			case DO_RECTANGLE:
+				pNewObj = _getRectangle( (*iter) ); break;
+			case DO_VORTEX:
+				pNewObj = _getVortex( (*iter) ); break;
+			case DO_STREAMLINE:
+				pNewObj = _getStreamLine( (*iter) ); break;
+			case DO_PATHLINE:
+				pNewObj = _getPathLine( (*iter) ); break;
+			case DO_STREAKLINE:
+				pNewObj = _getStreakLine( (*iter) ); break;
+			case DO_TIMELINE:
+				pNewObj = _getTimeLine( (*iter) ); break;
+			case DO_SPEEDLINE:
+				pNewObj = _getSpeedLine( (*iter) ); break;
+			default:
+				pNewObj = nullptr;
+			}
 
-		unsigned int parentID = _getHexAttrib(doc, _T("parent"));
-		if (parentID != 0) {
-			CDrawingObject *pParent = objCache.at(parentID);
-			if (pParent) {	//ensure we actually have the parent
-				bool bSuccess(false);
+			if (pNewObj) 
+			{
+				objCache.insert( pair<unsigned int, CDrawingObject*>(nID, pNewObj) );
 
-				//Is the cild a speed line?
-				switch (pParent->GetType()) 
+				if (parentID != 0) 
 				{
-					case DO_VORTEX:
-						if (pNewObj->GetType() == DO_SPEEDLINE) {
-							//reinterpret_cast<CVortexObj*>(pParent)->SetTrajectory( reinterpret_cast<CSpeedLine*>(pNewObj) );
-							reinterpret_cast<CVortexObj*>(pParent)->AddChild( reinterpret_cast<CSpeedLine*>(pNewObj) );
-							bSuccess = true;
+					CDrawingObject *pParent = objCache.at(parentID);
+					if (pParent) {	//ensure we actually have the parent
+						bool bSuccess(false);
+
+						//Is the cild a speed line?
+						switch (pParent->GetType()) 
+						{
+							case DO_VORTEX:
+								if (pNewObj->GetType() == DO_SPEEDLINE) {
+									reinterpret_cast<CVortexObj*>(pParent)->AddChild( reinterpret_cast<CSpeedLine*>(pNewObj) );
+									bSuccess = true;
+								}
+								break;
+							case DO_TIMELINE:
+								if (pNewObj->GetType() == DO_SPEEDLINE) {
+									reinterpret_cast<CTimeLine*>(pParent)->AddTrajectory( reinterpret_cast<CSpeedLine*>(pNewObj) );
+									bSuccess = true;
+								}
+								break;			
 						}
-						break;
-					case DO_TIMELINE:
-						if (pNewObj->GetType() == DO_SPEEDLINE) {
-							reinterpret_cast<CTimeLine*>(pParent)->AddTrajectory( reinterpret_cast<CSpeedLine*>(pNewObj) );
-							bSuccess = true;
+						if (!bSuccess) {	//normal child object
+							pParent->AddChild(pNewObj);
 						}
-						break;			
+					}
 				}
-				if (!bSuccess) {	//normal child object
-					pParent->AddChild(pNewObj);
+				else 
+				{
+					pMngr->Add(pNewObj);
 				}
 			}
 		}
+	}
+}
 
-		if (nObjType != DO_SPEEDLINE) {
-			dataContainer.Add(pNewObj);
+void CSVGConverter::_getParams(__in shared_ptr<CSimpleXMLNode> node, __out CDrawingObjectParams& params)
+{
+	for (auto iter = node->GetFirstAttribute(); iter != node->GetLastAttribute(); ++iter)
+	{
+		DrawinObjectParamName nParamName ( DrawingObjNames.GetParam((*iter)->strAttribName) );
+
+		if (nParamName != DOP_INVALID) {
+			params.SetValue( nParamName, _parseValue(nParamName, (*iter)->strAttribValue) );
+		}
+	}
+}
+
+CSimpleVariant CSVGConverter::_parseValue (DrawinObjectParamName nParamName, const CString& strVal)
+{
+	switch ( DrawingObjNames.GetParamDataType(nParamName) )
+	{
+		case DOT_UNSIGNED_INTEGER:
+			return unsigned( _tstoi(strVal) );
+		case DOT_FLOAT:
+			return _tstof( strVal );
+		case DOT_BOOLEAN:
+			return bool( _tstoi( strVal ) );
+		case DOT_COLOR:
+			return _extractFloatColor( strVal );
+		case DOT_POINT:
+			return _extractPointf( strVal );
+		case DOT_VECTOR:
+			return _extractVector2D( strVal );
+		case DOT_INTEGER:
+		default:
+			return _tstoi( strVal );
+	}
+}
+
+CDrawingObject* CSVGConverter::_getTriangle(__in shared_ptr<CSimpleXMLNode> node)
+{
+	float fRotation(0.0f);
+	floatColor color;
+
+	auto pAttr = node->PopAttribute(_T("transform"));
+	if (pAttr) {
+		parseTransformString(pAttr->strAttribValue, fRotation);
+	}
+
+	pAttr = node->PopAttribute(_T("style"));
+	if (pAttr) {
+		parseStyleString(pAttr->strAttribValue, &color);
+	}
+
+	CDrawingObjectParams params( DO_TRIANGLE );
+	_getParams( node, params );
+
+	auto pRetVal = new CTriangle( params );
+	pRetVal->SetColor(color);
+	pRetVal->SetRotation(fRotation);
+
+	pAttr = node->PopAttribute(_T("points"));
+	if (pAttr) {
+		vector<CPointf> *points = pRetVal->GetDataPoints();
+
+		_getVertices(pAttr->strAttribValue, 3, points);
+
+		CRectF rect;
+
+		rect.m_Min.x = (*points)[0].x;
+		rect.m_Min.y = (*points)[1].y;
+
+		rect.m_Max.x = (*points)[2].x;
+		rect.m_Max.y = (*points)[2].y;
+
+		pRetVal->SetRect(rect);
+	}
+
+	return pRetVal;
+}
+
+CDrawingObject* CSVGConverter::_getEllipse(__in shared_ptr<CSimpleXMLNode> node)
+{
+	float fRotation(0.0f);
+	floatColor color;
+
+	auto pAttr = node->PopAttribute(_T("transform"));
+	if (pAttr) {
+		parseTransformString(pAttr->strAttribValue, fRotation);
+	}
+
+	pAttr = node->PopAttribute(_T("style"));
+	if (pAttr) {
+		parseStyleString(pAttr->strAttribValue, &color);
+	}
+
+	CDrawingObjectParams params( DO_ELLIPSE );
+	_getParams( node, params );
+
+	auto pRetVal = new CEllipsoid( params );
+	pRetVal->SetRotation(fRotation);
+	pRetVal->SetColor(color);
+
+	return pRetVal;
+}
+
+CDrawingObject* CSVGConverter::_getRectangle(__in shared_ptr<CSimpleXMLNode> node)
+{
+	float fRotation(0.0f);
+	floatColor color;
+
+	auto pAttr = node->PopAttribute(_T("transform"));
+	if (pAttr) {
+		parseTransformString(pAttr->strAttribValue, fRotation);
+	}
+
+	pAttr = node->PopAttribute(_T("style"));
+	if (pAttr) {
+		parseStyleString(pAttr->strAttribValue, &color);
+	}
+
+	CDrawingObjectParams params( DO_RECTANGLE );
+	_getParams( node, params );
+
+	auto pRetVal = new CRectangle( params );
+	pRetVal->SetRotation(fRotation);
+	pRetVal->SetColor(color);
+
+	return pRetVal;
+}
+
+CDrawingObject* CSVGConverter::_getVortex(__in shared_ptr<CSimpleXMLNode> node)
+{
+	CDrawingObjectParams params( DO_VORTEX );
+
+	_getParams( node, params );
+
+	return new CVortexObj( params );
+}
+
+CDrawingObject* CSVGConverter::_getStreamLine(__in shared_ptr<CSimpleXMLNode> node)
+{
+	return _get_X_Line(node, DO_STREAMLINE);
+}
+
+CDrawingObject* CSVGConverter::_getPathLine(__in shared_ptr<CSimpleXMLNode> node)
+{
+	return _get_X_Line(node, DO_PATHLINE);
+}
+
+CDrawingObject* CSVGConverter::_getStreakLine(__in shared_ptr<CSimpleXMLNode> node)
+{
+	return _get_X_Line(node, DO_STREAKLINE);
+}
+
+CDrawingObject* CSVGConverter::_getTimeLine(__in shared_ptr<CSimpleXMLNode> node)
+{
+	return _get_X_Line(node, DO_TIMELINE);
+}
+
+CDrawingObject* CSVGConverter::_getSpeedLine(__in shared_ptr<CSimpleXMLNode> node)
+{
+	return _get_X_Line(node, DO_SPEEDLINE);
+}
+
+CDrawingObject* CSVGConverter::_get_X_Line(__in shared_ptr<CSimpleXMLNode> node, DrawingObjectType nType)
+{
+	CDrawingObjectParams params( nType);
+
+	auto attr = node->PopAttribute(_T("points"));
+
+	_getParams( node, params );
+
+	if (params.HasValue(DOP_DRAWASDROPLETS))
+	{
+		bool bAsDroplet = params.GetValueBool(DOP_DRAWASDROPLETS);
+		params.RemoveValue(DOP_DRAWASDROPLETS);
+
+		if (bAsDroplet) {
+			UINT style = params.GetValueUInt(DOP_SPEEDLINE_STYLE) & 0xFF;
+			style |= SL_DROPLET;
+			params.SetValue(DOP_SPEEDLINE_STYLE, style);
 		}
 	}
 
-	doc.OutOfElem();
-}
-
-float CSVGConverter::_getFloatAttrib(CMarkup &doc, const CString& strAttribName, float fDefault)
-{
-	CString str(doc.GetAttrib(strAttribName));
-	if (str.IsEmpty())
-		return fDefault;
-
-	return static_cast<float>(_tstof(str));
-}
-
-int CSVGConverter::_getIntAttrib(CMarkup &doc, const CString& strAttribName, int nDefault)
-{
-	CString str(doc.GetAttrib(strAttribName));
-	if (str.IsEmpty())
-		return nDefault;
-
-	return static_cast<int>(_tstoi(str));
-}
-
-unsigned int CSVGConverter::_getHexAttrib(CMarkup &doc, const CString& strAttribName, int nDefault)
-{
-	CString str(doc.GetAttrib(strAttribName));
-	if (str.IsEmpty())
-		return nDefault;
-
-	unsigned int retVal;
-	_stscanf_s(str, _T("%x"), &retVal);
-
-	return retVal;
-}
-
-bool CSVGConverter::_getBoolAttrib(CMarkup &doc, const CString& strAttribName, bool bDefault)
-{
-	CString str(doc.GetAttrib(strAttribName));
-	if (str.IsEmpty())
-		return bDefault;
-
-	return _tstoi(str)==0? false:true;
-}
-
-DrawingObjectType CSVGConverter::_getDrawingObjectType(CMarkup &doc)
-{
-	return static_cast<DrawingObjectType>(_tstoi(doc.GetAttrib(_T("objectType"))));
-}
-
- floatColor CSVGConverter::_getColorAttrib(__in CMarkup &doc, __in const CString& strAttribName, const floatColor &defaultValue)
- {
-	 CString val = doc.GetAttrib(strAttribName);
-	 if (val.IsEmpty()) return defaultValue;
-
-	 return _extractFloatColor(val);
- }
-
- CPointf CSVGConverter::_getPointfAttrib(__in CMarkup &doc, __in const CString& strAttribName, const CPointf &defaultValue)
- {
-	CString val = doc.GetAttrib(strAttribName);
-	if (val.IsEmpty()) return defaultValue;
-
-	CString x,y;
-	AfxExtractSubString(x, val, 0, _T(','));
-	AfxExtractSubString(y, val, 1, _T(','));
-
-	return CPointf( static_cast<float>(_tstof(x)),
-					static_cast<float>(_tstof(y)) );
- }
-
-CDrawingObject* CSVGConverter::_getTriangle(CMarkup &doc)
-{
-	CString points = doc.GetAttrib(_T("points"));
-	CRectF rect;
-	CString dummy, x,y;
-	//Get the points
-	AfxExtractSubString(dummy, points, 0, _T(' '));			//xMin
-	AfxExtractSubString(x, dummy, 0, _T(','));
-
-	rect.m_Min.x = static_cast<float>(_tstof(x));
-
-	AfxExtractSubString(dummy, points, 1, _T(' '));			
-	AfxExtractSubString(x, dummy, 0, _T(','));	//xMax
-	AfxExtractSubString(y, dummy, 1, _T(',')); //yMin
-
-	rect.m_Min.y = static_cast<float>(_tstof(y));
-	rect.m_Max.x = static_cast<float>(_tstof(x));
-
-	AfxExtractSubString(dummy, points, 2, _T(' '));		
-	AfxExtractSubString(y, dummy, 1, _T(',')); //yMax
-
-	rect.m_Max.y = static_cast<float>(_tstof(y));
-
-	floatColor color (0.0f ,0.0f ,0.0f ,1.0f);
-	BOOL bSolid = true;
-	float fRotation = 0.0f, fThickness = 1.0f;
-
-	bool bHatched = _getBoolAttrib(doc, _T("hatched"));
-
-	parseStyleString(doc.GetAttrib(_T("style")), &color, bSolid, fThickness);
-	parseTransformString(doc.GetAttrib(_T("transform")), fRotation);
-
-	bSolid = _getBoolAttrib(doc, _T("IsSolid"));
-
-	CTriangle *pNewObj = new CTriangle(rect, color);
-	pNewObj->SetRotation(fRotation);
-	pNewObj->SetThickness(fThickness);
-	pNewObj->DrawStippled(bHatched);
-	pNewObj->IsSolid(bSolid?true:false);
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getEllipse(CMarkup &doc)
-{
-	float x		= _getFloatAttrib(doc, _T("cx"));
-	float y		= _getFloatAttrib(doc, _T("cy"));
-	float r1	= _getFloatAttrib(doc, _T("rx")); 
-	float r2	= _getFloatAttrib(doc, _T("ry")); 
-
-	bool bHatched = _getBoolAttrib(doc, _T("hatched"));
-
-	floatColor color (0.0f ,0.0f ,0.0f ,1.0f);
-	BOOL bSolid = TRUE;
-	float fRotation = 0.0f, fThickness = 1.0f;
-	CString id, dummy;
-
-	parseStyleString(doc.GetAttrib(_T("style")), &color, bSolid, fThickness);
-	parseTransformString(doc.GetAttrib(_T("transform")), fRotation);
-
-	bSolid = _getBoolAttrib(doc, _T("IsSolid"));
-
-	CEllipsoid *pNewObj = new CEllipsoid(x,y,r1,r2, color, bSolid?true:false);
-
-	pNewObj->SetThickness(fThickness);
-	pNewObj->SetRotation(fRotation);
-	pNewObj->DrawStippled(bHatched);
-	pNewObj->IsSolid(bSolid?true:false);
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getRectangle(CMarkup &doc)
-{
-	float x = _getFloatAttrib(doc, _T("x"));
-	float y = _getFloatAttrib(doc, _T("y"));
-	float w = _getFloatAttrib(doc, _T("width"));
-	float h = _getFloatAttrib(doc, _T("height"));
-	bool bHatched = _getBoolAttrib(doc, _T("hatched"));
-
-	floatColor color (0.0f ,0.0f ,0.0f ,1.0f);
-	BOOL bSolid = true;
-	float fRotation = 0.0f, fThickness = 1.0f;
-
-	parseStyleString(doc.GetAttrib(_T("style")), &color, bSolid, fThickness);
-	parseTransformString(doc.GetAttrib(_T("transform")), fRotation);
-
-	bSolid = _getBoolAttrib(doc, _T("IsSolid"));
-
-	CRectangle *pNewObj = new CRectangle(	CRectF( x, y, x+w, y+h),
-											color,
-											bSolid?true:false);
-	pNewObj->SetRotation(fRotation);
-	pNewObj->SetThickness(fThickness);
-	pNewObj->DrawStippled(bHatched);
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getVortex(CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_VORTEX);
-	floatColor color (0.0f ,0.0f ,0.0f ,1.0f);
-
-	params.SetValue(DOP_COLOR,					_getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_COLOR), color));
-	params.SetValue(DOP_HALOCOLOR,				_getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_HALOCOLOR), color));
-	params.SetValue(DOP_ARROWCOLOR,				_getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_ARROWCOLOR), color));
-	params.SetValue(DOP_THICKNESS,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_THICKNESS)));
-	params.SetValue(DOP_CENTER,					_getPointfAttrib(doc, DrawingObjNames.GetParamName(DOP_CENTER)));
-	params.SetValue(DOP_RADIUS1,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_RADIUS1)));
-	params.SetValue(DOP_RADIUS2,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_RADIUS2)));
-	params.SetValue(DOP_ARROWSIZE,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ARROWSIZE)));
-	params.SetValue(DOP_ROTATION,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ROTATION)));
-	params.SetValue(DOP_THRESHOLD,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_THRESHOLD)));
-	params.SetValue(DOP_AUTOADJUSTSIZE,			_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_AUTOADJUSTSIZE)));
-	params.SetValue(DOP_SHOWTRAJECTORY,			_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_SHOWTRAJECTORY)));
-	params.SetValue(DOP_TRANSPARENTTRAJECTORY,	_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_TRANSPARENTTRAJECTORY)));
-	params.SetValue(DOP_SMOOTHNESS,				_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SMOOTHNESS)));
-	params.SetValue(DOP_TRAJECTORYSTEPS,		_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_TRAJECTORYSTEPS)));
-	params.SetValue(DOP_NUMARROWS,				_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUMARROWS)));
-	params.SetValue(DOP_APPEARANCE,				_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_APPEARANCE)));
-	params.SetValue(DOP_VORTEXSTYLE,			_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_VORTEXSTYLE)));
-	params.SetValue(DOP_VORTEXDIR,				_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_VORTEXDIR)));
-	params.SetValue(DOP_REVOLUTIONS,			_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_REVOLUTIONS)));
-	params.SetValue(DOP_ISSOLID, false);
-	params.SetValue(DOP_HATCHED, false);
-
-	return new CVortexObj(params);
-}
-
-CDrawingObject* CSVGConverter::_getStreamLine(CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_STREAMLINE);
-	_getStreamLineParams(doc, params);
-
-	CStreamLine *pNewObj = new CStreamLine(params);
-
-	_getVertices(doc, _T("points"), pNewObj->GetDataPoints(), pNewObj->GetMaxIntegrationLen());
-		
-	pNewObj->CalcBoundingRect();
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getPathLine(CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_PATHLINE);
-	_getStreamLineParams(doc, params);
-
-	params.SetValue(DOP_STARTFRAME, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_STARTFRAME) ));
-	params.SetValue(DOP_USE_STARTFRAME, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_USE_STARTFRAME) ));
-
-	CPathLine *pNewObj = new CPathLine(params);
-
-	_getVertices(doc, _T("points"), pNewObj->GetDataPoints(), pNewObj->GetMaxIntegrationLen());
-
-	pNewObj->CalcBoundingRect();
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getStreakLine(__in CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_STREAKLINE);
-	_getStreamLineParams(doc, params);
-
-	params.SetValue(DOP_STARTFRAME, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_STARTFRAME) ));
-	params.SetValue(DOP_USE_STARTFRAME, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_USE_STARTFRAME) ));
-	params.SetValue(DOP_RENDER_AS_PARTICLES, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_RENDER_AS_PARTICLES) ));
-
-	CStreakLine *pNewObj = new CStreakLine(params);
-
-	_getVertices(doc, _T("points"), pNewObj->GetDataPoints(), pNewObj->GetMaxIntegrationLen());
-
-	pNewObj->CalcBoundingRect();
-	pNewObj->NeedRecalc(false);
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getTimeLine(__in CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_TIMELINE);
-	_getStreamLineParams(doc, params);
-
-	params.SetValue(DOP_STARTFRAME,			_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_STARTFRAME) ));
-	params.SetValue(DOP_USE_STARTFRAME,		_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_USE_STARTFRAME) ));
-	params.SetValue(DOP_PTEND,				_getPointfAttrib(doc, DrawingObjNames.GetParamName(DOP_PTEND) ));
-	params.SetValue(DOP_NUM_SAMPLES,		_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUM_SAMPLES) ));
-	params.SetValue(DOP_SHOW_SEEDINGLINE,	_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_SHOW_SEEDINGLINE) ));
-	params.SetValue(DOP_SHOWTRAJECTORY,		_getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_SHOWTRAJECTORY) ));
-
-	CTimeLine *pNewObj = new CTimeLine(params);
-
-	_getVertices(doc, _T("points"), pNewObj->GetDataPoints(), pNewObj->GetMaxIntegrationLen());
-
-	pNewObj->CalcBoundingRect();
-
-	return pNewObj;
-}
-
-CDrawingObject* CSVGConverter::_getSpeedLine(__in CMarkup &doc)
-{
-	CDrawingObjectParams params(DO_SPEEDLINE);
-	_getStreamLineParams(doc, params);
-
-	params.SetValue(DOP_ALPHA,				_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ALPHA) ));
-	params.SetValue(DOP_ALPHA_MIN,			_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ALPHA_MIN) ));
-	params.SetValue(DOP_THICKNESS_MIN,		_getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_THICKNESS_MIN) ));
-
-	CSpeedLine *pNewObj = new CSpeedLine(params);
-
-	_getVertices(doc, _T("points"), pNewObj->GetDataPoints(), 30);
-
-	pNewObj->CalcBoundingRect();
+	CPolyLine *pNewObj;
+
+	switch (nType)
+	{
+		case DO_STREAKLINE:
+			pNewObj = new CStreakLine( params );
+			break;
+		case DO_PATHLINE:
+			pNewObj= new CPathLine( params );
+			break;
+		case DO_TIMELINE:
+			pNewObj = new CTimeLine( params );
+			break;
+		case DO_SPEEDLINE:
+			pNewObj = new CSpeedLine( params );
+			break;
+		case DO_STREAMLINE:
+		default:
+			pNewObj = new CStreamLine( params );
+			break;
+	}
+
+	int nVertices = ( nType==DO_SPEEDLINE)? 50 : reinterpret_cast<CStreamLine*>(pNewObj)->GetMaxIntegrationLen();
+
+	if (attr) {
+		_getVertices(attr->strAttribValue, nVertices, pNewObj->GetDataPoints());
+		pNewObj->CalcBoundingRect();
+	}
 
 	return pNewObj;
 }
@@ -527,49 +433,35 @@ floatColor CSVGConverter::_extractFloatColor(const CString &str)
 						1.0f);
 }
 
-void CSVGConverter::parseStyleString(__in const CString& strSource, __out LPFLOATCOLOR pColor, __out BOOL &bSolid, __out float &fLineWidth)
+CPointf CSVGConverter::_extractPointf(__in const CString &str)
 {
-	CString dummy, dummy2, value;
+	CString x,y;
+	AfxExtractSubString(x, str, 0, _T(','));
+	AfxExtractSubString(y, str, 1, _T(','));
 
-	for (int i=0; AfxExtractSubString(dummy, strSource, i, _T(';')); i++)
-	{
-		if (AfxExtractSubString(dummy2, dummy, 0, _T(':')))
-		{
-			AfxExtractSubString(value, dummy, 1, _T(':'));
-
-			if (dummy2 == _T("fill")) {
-				if(value == _T("none")) {
-					bSolid = false;
-				} else{
-					bSolid = true;
-					*pColor = _extractFloatColor(value);
-				}
-			} else if (dummy2 == _T("stroke")) {
-				if (value == _T("none")) {
-					bSolid = true;
-				} else {
-					bSolid = false;
-					*pColor = _extractFloatColor(value);
-				}
-
-			} else if (dummy2 == _T("stroke-width")) {
-				fLineWidth = (static_cast<float>(_tstof(value)));
-			}
-		}
-	}
+	return CPointf( static_cast<float>(_tstof(x)),
+					static_cast<float>(_tstof(y)) );
 }
 
-
-
-void CSVGConverter::parseTransformString(__in const CString& strSource, __out float &rotation)
+CVector2D CSVGConverter::_extractVector2D(__in const CString &str)
 {
-	CString dummy;
+	CString x,y;
+	AfxExtractSubString(x, str, 0, _T(','));
+	AfxExtractSubString(y, str, 1, _T(','));
 
-	if (AfxExtractSubString(dummy, strSource, 1, _T('(')))
-	{
-		AfxExtractSubString(dummy, dummy, 0, _T(','));
-		rotation = static_cast<float>(_tstof(dummy));
-	}
+	return CVector2D( static_cast<float>(_tstof(x)),
+					static_cast<float>(_tstof(y)) );
+}
+
+unsigned int CSVGConverter::_extractHexAttrib(const CString& strHexValue, unsigned int nDefault)
+{
+	if (strHexValue.IsEmpty())
+		return nDefault;
+
+	unsigned int retVal;
+	_stscanf_s(strHexValue, _T("%x"), &retVal);
+
+	return retVal;
 }
 
 CString CSVGConverter::GetSVGString(CDocument &document)
@@ -608,7 +500,6 @@ CString CSVGConverter::GetSVGString(CDocument &document)
 	return str;
 }
 
-
 float CSVGConverter::_getLineWidthFactor(CDocument &document)
 {
 	float fFactor = 1.0f;
@@ -634,9 +525,8 @@ float CSVGConverter::_getLineWidthFactor(CDocument &document)
 	return fFactor;
 }
 
-void CSVGConverter::_getVertices(__in CMarkup &doc, __in const CString& strAttribName, __out vector<CPointf>* pDest, int numVertices)
+void CSVGConverter::_getVertices(__in const CString& strVertices, __in int numVertices, __out vector<CPointf>* pDest)
 {
-	CString strVertices = doc.GetAttrib(strAttribName);
 	CString strCurrent, strX, strY;
 	int nCurrPos=0;
 
@@ -660,37 +550,45 @@ void CSVGConverter::_getVertices(__in CMarkup &doc, __in const CString& strAttri
 	pDest->shrink_to_fit();
 }
 
-void CSVGConverter::_getBaseParams(__in CMarkup& doc, CDrawingObjectParams &params)
+void CSVGConverter::parseStyleString(__in const CString& strSource, __out LPFLOATCOLOR pColor)
 {
-	params.SetValue(DOP_TYPE, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_TYPE)));
-	params.SetValue(DOP_COLOR, _getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_COLOR), floatColor(0,0,0) ));
-	params.SetValue(DOP_THICKNESS, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_THICKNESS), 1.0f));
-	params.SetValue(DOP_ROTATION, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ROTATION)));
-	params.SetValue(DOP_ISSOLID, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_ISSOLID)));
-	params.SetValue(DOP_ALPHA, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ALPHA), 1.0f));
-	params.SetValue(DOP_HALOCOLOR, _getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_HALOCOLOR), floatColor(1,1,1) ));
-	params.SetValue(DOP_HATCHED, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_HATCHED) ));
+	CString dummy, dummy2, value;
+
+	for (int i=0; AfxExtractSubString(dummy, strSource, i, _T(';')); i++)
+	{
+		if (AfxExtractSubString(dummy2, dummy, 0, _T(':')))
+		{
+			AfxExtractSubString(value, dummy, 1, _T(':'));
+
+			if (dummy2 == _T("fill")) {
+				if(value != _T("none")) {
+					*pColor = _extractFloatColor(value);
+				}
+			} else if (dummy2 == _T("stroke")) {
+				if (value != _T("none")) {
+					*pColor = _extractFloatColor(value);
+				}
+			} 
+		}
+	}
 }
 
-void CSVGConverter::_getStreamLineParams(__in CMarkup& doc, CDrawingObjectParams &params)
+void CSVGConverter::parseTransformString(__in const CString& strSource, __out float &rotation)
 {
-	_getBaseParams(doc, params);
+	CString dummy;
 
-	params.SetValue(DOP_ARROWCOLOR, _getColorAttrib(doc, DrawingObjNames.GetParamName(DOP_ARROWCOLOR), floatColor(1,1,1)));
-	params.SetValue(DOP_ORIGIN, _getPointfAttrib(doc, DrawingObjNames.GetParamName(DOP_ORIGIN)));
-	params.SetValue(DOP_INTEGRATIONSTEPS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_INTEGRATIONSTEPS)));
-	params.SetValue(DOP_STEPLENGTH, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_STEPLENGTH)));
-	params.SetValue(DOP_SHOWARROWS, _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_SHOWARROWS)));
-	params.SetValue(DOP_NUMARROWS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUMARROWS)));
-	params.SetValue(DOP_ARROWSIZE, _getFloatAttrib(doc, DrawingObjNames.GetParamName(DOP_ARROWSIZE)));
-	params.SetValue(DOP_SMOOTHNESS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SMOOTHNESS)));
-	params.SetValue(DOP_NUMDROPLETS, _getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_NUMDROPLETS),1));
-	params.SetValue(DOP_SPEEDLINE_STYLE,	_getIntAttrib(doc, DrawingObjNames.GetParamName(DOP_SPEEDLINE_STYLE) ));
-
-	bool bDrawAsDroplet =  _getBoolAttrib(doc, DrawingObjNames.GetParamName(DOP_DRAWASDROPLETS));
-	if (bDrawAsDroplet) {
-		UINT style = params.GetValueUInt(DOP_SPEEDLINE_STYLE) & 0xFF;
-		style |= SL_DROPLET;
-		params.SetValue(DOP_SPEEDLINE_STYLE, style);
+	if (AfxExtractSubString(dummy, strSource, 1, _T('(')))
+	{
+		AfxExtractSubString(dummy, dummy, 0, _T(','));
+		rotation = static_cast<float>(_tstof(dummy));
 	}
+}
+
+bool CSVGConverter::_getBoolAttrib(CMarkup &doc, const CString& strAttribName, bool bDefault)
+{
+	CString str(doc.GetAttrib(strAttribName));
+	if (str.IsEmpty())
+		return bDefault;
+
+	return _tstoi(str)==0? false:true;
 }

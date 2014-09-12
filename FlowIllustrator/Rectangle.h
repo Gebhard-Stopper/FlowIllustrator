@@ -38,6 +38,8 @@ private:
 
 public:
 	CRectangle(const CRectF& BBox, const floatColor& color, bool bSolid = false);
+	CRectangle(CDrawingObjectParams& params);
+
 	virtual ~CRectangle(void);
 
 public:
@@ -71,7 +73,6 @@ public:
 
 	void SetWidth(float fWidth);
 	void SetHeight(float fHeight);
-	//void SetCenter(const CPointf &center);
 
 protected:
 	__inline CVector2D _getRotationCenter() const {
@@ -82,19 +83,7 @@ protected:
 		return CVector2D(c.x, c.y);
 	}
 
-	/**
-	 *	Set one or more parameters to a CDrawingObject.
-	 *
-	 *	@param	paramID The unique DrawinObjectParamName of this parameter.
-	 *	@param	val Reference to a CSimpleVariant, representing the value of the parameter.
-	 *	
-	 *	@remarks	This function must be implemented in derived classes to ensure that all parameters are
-	 *				set correctly.
-	 *
-	 *	@see CDrawingObject::setParam()
-	 */
-	virtual bool setParam(DrawinObjectParamName paramID, const CSimpleVariant &val);
-
+	
 private:
 	CPointf _getCenter() const;
 	void _draw();

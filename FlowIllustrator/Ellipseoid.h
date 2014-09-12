@@ -77,6 +77,8 @@ public:
 	 */
 	CEllipsoid(const CRectF &rect, const floatColor& color, bool bSolid = true);
 
+	CEllipsoid(CDrawingObjectParams& params);
+
 	/**
 	 *	Destroy the ellipse and all of its data.
 	 */
@@ -166,6 +168,9 @@ public:
 	 *	@param radius The radius as float.
 	 */
 	void SetRadius2(float radius);
+
+	virtual void SetCenter(const CPointf &point);
+
 
 private:
 	void _calcGlVertexPos();

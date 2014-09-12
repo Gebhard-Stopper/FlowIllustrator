@@ -184,7 +184,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;TIXML_USE_TICPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\armadillo-3.920.2\include;..\glew-1.10.0\include;G:\DropBox\Master\Sem4\Thesis\code\FlowIllustrator\FlowIllustrator\documentation;..\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\SimpleXML;..\armadillo-3.920.2\include;..\glew-1.10.0\include;G:\DropBox\Master\Sem4\Thesis\code\FlowIllustrator\FlowIllustrator\documentation;..\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -201,7 +201,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\LAPACK\x64;..\BLAS\x64;..\freeglut\lib\x64;..\glew-1.10.0\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;glew32.lib;lapack_win64_MT.lib;blas_win64_MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <Profile>false</Profile>
     </Link>
     <Midl>
@@ -261,7 +261,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\armadillo-3.920.2\include;C:\glew-1.9.0\include;C:\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\GitProjects\FlowIllustrator\FlowIllustrator\SimpleXML;..\armadillo-3.920.2\include;C:\glew-1.9.0\include;C:\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -301,7 +301,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\armadillo-3.920.2\include;..\glew-1.10.0\include;..\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\SimpleXML;..\armadillo-3.920.2\include;..\glew-1.10.0\include;..\freeglut\include;%(AdditionalIncludeDirectories);.\third_party</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -388,6 +388,7 @@
     <ClInclude Include="Selection.h" />
     <ClInclude Include="ShaderMngr.h" />
     <ClInclude Include="SimpleVariant.h" />
+    <ClInclude Include="SimpleXML\SimpleXML.h" />
     <ClInclude Include="SpeedLine.h" />
     <ClInclude Include="StatusDlg.h" />
     <ClInclude Include="stdafx.h" />
@@ -440,6 +441,7 @@
     <ClCompile Include="Selection.cpp" />
     <ClCompile Include="ShaderMngr.cpp" />
     <ClCompile Include="SimpleVariant.cpp" />
+    <ClCompile Include="SimpleXML\SimpleXML.cpp" />
     <ClCompile Include="SpeedLine.cpp" />
     <ClCompile Include="StatusDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

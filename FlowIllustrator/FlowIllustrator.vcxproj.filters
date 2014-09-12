@@ -22,6 +22,9 @@
     <Filter Include="documentation">
       <UniqueIdentifier>{a803c25f-0cdc-4944-a2fe-a1b9c6790656}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SimpleXML">
+      <UniqueIdentifier>{59d241a9-def3-44f6-a326-48390dc5a6bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -293,6 +296,9 @@
     <ClInclude Include="OpenGlDummyWnd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimpleXML\SimpleXML.h">
+      <Filter>SimpleXML</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FlowIllustrator.cpp">
@@ -441,6 +447,9 @@
     </ClCompile>
     <ClCompile Include="OpenGlDummyWnd.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleXML\SimpleXML.cpp">
+      <Filter>SimpleXML</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
