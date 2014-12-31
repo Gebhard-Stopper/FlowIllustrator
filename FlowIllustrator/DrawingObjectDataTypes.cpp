@@ -49,53 +49,57 @@ void CDONames::Init()
 	m_TypeNames.Add(DO_POLYLINE, "Poly line");
 	m_TypeNames.Add(DO_SPEEDLINE, "Speed line");
 
-	m_ParamNames.Add(DOP_TYPE, "objectType");
-	m_ParamNames.Add(DOP_COLOR, "color");
-	m_ParamNames.Add(DOP_THICKNESS, "thickness");
-	m_ParamNames.Add(DOP_ROTATION, "rotAngle");
-	m_ParamNames.Add(DOP_ISSOLID, "IsSolid");
-	m_ParamNames.Add(DOP_ALPHA, "alpha");
-	m_ParamNames.Add(DOP_WIDTH, "width");
-	m_ParamNames.Add(DOP_HEIGHT, "height");
-	m_ParamNames.Add(DOP_CENTER, "center");
-	m_ParamNames.Add(DOP_DRAW_STIPPLED, "drawStippled");
-	m_ParamNames.Add(DOP_INTEGRATIONSTEPS, "numSteps");
-	m_ParamNames.Add(DOP_STEPLENGTH, "stepLen");
-	m_ParamNames.Add(DOP_ORIGIN, "origin");
-	m_ParamNames.Add(DOP_RENDER_AS_PARTICLES, "asParticles");
-	m_ParamNames.Add(DOP_STARTFRAME, "startFrame");
-	m_ParamNames.Add(DOP_USE_STARTFRAME, "useFixedStartFrame");
-	m_ParamNames.Add(DOP_DRAWASDROPLETS, "drawAsDroplet");
-	m_ParamNames.Add(DOP_HALOCOLOR, "haloColor");
-	m_ParamNames.Add(DOP_ARROWCOLOR, "arrowColor");
-	m_ParamNames.Add(DOP_SMOOTHNESS, "smoothness");
-	m_ParamNames.Add(DOP_VORTEXSTYLE, "vortexStyle");
-	m_ParamNames.Add(DOP_VORTEXDIR, "rotationDir");
-	m_ParamNames.Add(DOP_ARROWSIZE, "arrowLen");
-	m_ParamNames.Add(DOP_THRESHOLD, "vortexThreshold");
-	m_ParamNames.Add(DOP_AUTOADJUSTSIZE, "autoAdjustSize");
-	m_ParamNames.Add(DOP_SHOWTRAJECTORY, "showTrajectory");
-	m_ParamNames.Add(DOP_TRANSPARENTTRAJECTORY, "trajectoryTransparent");
-	m_ParamNames.Add(DOP_REVOLUTIONS, "numRevolutions");
-	m_ParamNames.Add(DOP_NUMARROWS, "numArrows");
-	m_ParamNames.Add(DOP_TRAJECTORYSTEPS, "trajectorySteps");
-	m_ParamNames.Add(DOP_SHOWARROWS, "showArrows");
-	m_ParamNames.Add(DOP_APPEARANCE, "appearance");
-	m_ParamNames.Add(DOP_ARROW_DIR, "arrowDir");
-	m_ParamNames.Add(DOP_RADIUS1, "r1");
-	m_ParamNames.Add(DOP_RADIUS2, "r2");
-	m_ParamNames.Add(DOP_HATCHED, "hatched");
-	m_ParamNames.Add(DOP_PTEND, "ptEnd");
-	m_ParamNames.Add(DOP_NUM_SAMPLES, "numSamples");
-	m_ParamNames.Add(DOP_SHOW_SEEDINGLINE, "showSeedline");
-
-	m_ParamNames.Add(DOP_SPEEDLINE_STYLE, "speedLineStyle");
-	m_ParamNames.Add(DOP_ALPHA_MIN, "alphaMin");
-	m_ParamNames.Add(DOP_THICKNESS_MIN, "thicknessMin");
-
-	m_ParamNames.Add(DOP_NUMDROPLETS, "numDroplets");
-	m_ParamNames.Add(DOP_GROW_STEPS, "growSteps");
-	m_ParamNames.Add(DOP_TRANSPARENT_STEPS, "transparentSteps");	
+	RegisterParameter(DOP_TYPE,						_T("objectType"),				DOT_INTEGER);
+	RegisterParameter(DOP_COLOR,					_T("color"),					DOT_COLOR);
+	RegisterParameter(DOP_THICKNESS,				_T("thickness"),				DOT_FLOAT);
+	RegisterParameter(DOP_ROTATION,					_T("rotAngle"),					DOT_FLOAT);
+	RegisterParameter(DOP_ISSOLID,					_T("IsSolid"),					DOT_BOOLEAN);
+	RegisterParameter(DOP_ALPHA,					_T("alpha"),					DOT_FLOAT);
+	RegisterParameter(DOP_WIDTH,					_T("width"),					DOT_FLOAT);
+	RegisterParameter(DOP_HEIGHT,					_T("height"),					DOT_FLOAT);
+	RegisterParameter(DOP_CENTER,					_T("center"),					DOT_POINT);
+	RegisterParameter(DOP_CENTER_X,					_T("cx"),						DOT_FLOAT);
+	RegisterParameter(DOP_CENTER_Y,					_T("cy"),						DOT_FLOAT);
+	RegisterAlternativeName(DOP_CENTER_X,			_T("x"),						DOT_FLOAT);
+	RegisterAlternativeName(DOP_CENTER_Y,			_T("y"),						DOT_FLOAT);
+	RegisterParameter(DOP_DRAW_STIPPLED,			_T("drawStippled"),				DOT_BOOLEAN);
+	RegisterParameter(DOP_INTEGRATIONSTEPS,			_T("numSteps"),					DOT_INTEGER);
+	RegisterParameter(DOP_STEPLENGTH,				_T("stepLen"),					DOT_FLOAT);
+	RegisterParameter(DOP_ORIGIN,					_T("origin"),					DOT_POINT);
+	RegisterParameter(DOP_RENDER_AS_PARTICLES,		_T("asParticles"),				DOT_BOOLEAN);
+	RegisterParameter(DOP_STARTFRAME,				_T("startFrame"),				DOT_INTEGER);
+	RegisterParameter(DOP_USE_STARTFRAME,			_T("useFixedStartFrame"),		DOT_BOOLEAN);
+	RegisterParameter(DOP_DRAWASDROPLETS,			_T("drawAsDroplet"),			DOT_BOOLEAN);
+	RegisterParameter(DOP_HALOCOLOR,				_T("haloColor"),				DOT_COLOR);
+	RegisterParameter(DOP_ARROWCOLOR,				_T("arrowColor"),				DOT_COLOR);
+	RegisterParameter(DOP_SMOOTHNESS,				_T("smoothness"),				DOT_INTEGER);
+	RegisterParameter(DOP_VORTEXSTYLE,				_T("vortexStyle"),				DOT_INTEGER);
+	RegisterParameter(DOP_VORTEXDIR,				_T("rotationDir"),				DOT_INTEGER);
+	RegisterParameter(DOP_ARROWSIZE,				_T("arrowLen"),					DOT_FLOAT);
+	RegisterParameter(DOP_THRESHOLD,				_T("vortexThreshold"),			DOT_FLOAT);
+	RegisterParameter(DOP_AUTOADJUSTSIZE,			_T("autoAdjustSize"),			DOT_BOOLEAN);
+	RegisterParameter(DOP_SHOWTRAJECTORY,			_T("showTrajectory"),			DOT_BOOLEAN);
+	RegisterParameter(DOP_TRANSPARENTTRAJECTORY,	_T("trajectoryTransparent"),	DOT_BOOLEAN);
+	RegisterParameter(DOP_REVOLUTIONS,				_T("numRevolutions"),			DOT_FLOAT);
+	RegisterParameter(DOP_NUMARROWS,				_T("numArrows"),				DOT_INTEGER);
+	RegisterParameter(DOP_TRAJECTORYSTEPS,			_T("trajectorySteps"),			DOT_INTEGER);
+	RegisterParameter(DOP_SHOWARROWS,				_T("showArrows"),				DOT_BOOLEAN);
+	RegisterParameter(DOP_APPEARANCE,				_T("appearance"),				DOT_INTEGER);
+	RegisterParameter(DOP_ARROW_DIR,				_T("arrowDir"),					DOT_VECTOR);
+	RegisterParameter(DOP_RADIUS1,					_T("rx"),						DOT_FLOAT);
+	RegisterParameter(DOP_RADIUS2,					_T("ry"),						DOT_FLOAT);
+	RegisterAlternativeName(DOP_RADIUS1,			_T("r1"),						DOT_FLOAT);
+	RegisterAlternativeName(DOP_RADIUS2,			_T("r2"),						DOT_FLOAT);
+	RegisterParameter(DOP_HATCHED,					_T("hatched"),					DOT_BOOLEAN);
+	RegisterParameter(DOP_PTEND,					_T("ptEnd"),					DOT_POINT);
+	RegisterParameter(DOP_NUM_SAMPLES,				_T("numSamples"),				DOT_INTEGER);
+	RegisterParameter(DOP_SHOW_SEEDINGLINE,			_T("showSeedline"),				DOT_BOOLEAN);
+	RegisterParameter(DOP_SPEEDLINE_STYLE,			_T("speedLineStyle"),			DOT_INTEGER);
+	RegisterParameter(DOP_ALPHA_MIN,				_T("alphaMin"),					DOT_FLOAT);
+	RegisterParameter(DOP_THICKNESS_MIN,			_T("thicknessMin"),				DOT_FLOAT);
+	RegisterParameter(DOP_NUMDROPLETS,				_T("numDroplets"),				DOT_INTEGER);
+	RegisterParameter(DOP_GROW_STEPS,				_T("growSteps"),				DOT_INTEGER);
+	RegisterParameter(DOP_TRANSPARENT_STEPS,		_T("transparentSteps"),			DOT_INTEGER);	
 }
 
 CString CDONames::GetTypeName(DrawingObjectType nType) const
@@ -116,4 +120,31 @@ CString CDONames::GetParamName(DrawinObjectParamName nParam) const
 DrawinObjectParamName CDONames::GetParam(const CString &strName) const
 {
 	return static_cast<DrawinObjectParamName>(m_ParamNames.Get(strName));
+}
+
+void CDONames::RegisterParameter(DrawinObjectParamName nParamName, const CString& strParamName, DrawinObjectParamType nParamDataType)
+{
+	CT2CA pszConvertedAnsiString (strParamName);
+	string str (pszConvertedAnsiString);
+
+	m_ParamNames.Add(nParamName, str);
+	m_ParamDataTypes.insert( pair<int, int>(nParamName, nParamDataType) );
+}
+
+void CDONames::RegisterAlternativeName(DrawinObjectParamName nParamName, const CString& strParamName, DrawinObjectParamType nParamDataType)
+{
+	CT2CA pszConvertedAnsiString (strParamName);
+	string str (pszConvertedAnsiString);
+
+	m_ParamNames.AddAlternative(nParamName, str);
+	m_ParamDataTypes.insert( pair<int, int>(nParamName, nParamDataType) );
+}
+
+DrawinObjectParamType CDONames::GetParamDataType(DrawinObjectParamName nParamName) const
+{
+	auto iter = m_ParamDataTypes.find (nParamName);
+	if (iter != m_ParamDataTypes.end()) 
+		return static_cast<DrawinObjectParamType>((*iter).second);
+
+	return DOT_INVALID;
 }

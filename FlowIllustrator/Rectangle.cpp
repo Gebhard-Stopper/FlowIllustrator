@@ -31,17 +31,34 @@
 #include "PolyLine.h"
 
 CRectangle::CRectangle(const CRectF& BBox, const floatColor& color, bool bSolid)
-	: CDrawingObject(BBox, DO_RECTANGLE, color)
+	: CDrawingObject(BBox, DO_RECTANGLE, color), m_bUseRotationCenter(false)
 {
 	IsSolid(bSolid);
 
 	CPointf center			= _getCenter();
 	m_rotationOrigin		= CVector2D(center.x, center.y);
-	m_bUseRotationCenter	= false;
 
 	_OnParamsChanged();
 }
 
+CRectangle::CRectangle(CDrawingObjectParams& params)
+	: CDrawingObject( DO_RECTANGLE ), m_bUseRotationCenter(false)
+{
+	if (params.HasValue(DOP_CENTER_X) && params.HasValue(DOP_CENTER_Y))
+	{
+		CSimpleVariant buffer;
+		params.popValue(DOP_CENTER_X, buffer);
+		float x = buffer.GetFloatVal();
+		params.popValue(DOP_CENTER_Y, buffer);
+		float y = buffer.GetFloatVal();
+
+		SetCenter(CPointf(x,y));
+	}
+
+	SetParams(params);
+
+	_OnParamsChanged();
+}
 
 CRectangle::~CRectangle(void)
 {
@@ -100,41 +117,9 @@ void CRectangle::_draw()
 	glDisableClientState(GL_VERTEX_ARRAY);	
 }
 
-bool CRectangle::setParam(DrawinObjectParamName paramID, const CSimpleVariant &val)
-{
-	bool bResult(CDrawingObject::setParam(paramID, val));
-
-	if (!bResult)
-	{
-		switch (paramID)
-		{
-			/*case DOP_WIDTH:
-				SetWidth( val.GetFloatVal() );
-				bResult = true;
-				break;
-			case DOP_HEIGHT:
-				SetHeight( val.GetFloatVal() );
-				bResult = true;
-				break;
-			case DOP_CENTER:
-				SetCenter( val.GetPointfVal() );
-				bResult = true;
-				break;*/
-		}
-	}
-
-	return bResult;
-}
-
 void CRectangle::GetParams(CDrawingObjectParams &params) const
 {
 	CDrawingObject::GetParams(params);
-
-	/*CRectF rect = GetRect();
-
-	params.SetValue( DOP_WIDTH, rect.getWidth() );
-	params.SetValue( DOP_HEIGHT, rect.getHeight() );
-	params.SetValue( DOP_CENTER, rect.GetCenter() );*/
 }
 
 CPointf CRectangle::_getCenter() const
@@ -161,13 +146,14 @@ CString CRectangle::toString(float fLineWidthFactor) const
 				  transform=\"rotate(%f,%f,%f)\"\n\
 				  hatched=\"%d\"\n\
 				  IsSolid=\"%d\"\n\
+				  thickness=\"%f\"\
 				  id=\"%p\"\n\
 				  />\n"),
 		GetType(), style,
-		rect.m_Min.x, rect.m_Min.y,
+		center.x, center.y,
 		rect.getWidth(), rect.getHeight(),
-		GetRotation(), center.x, center.y,
-		DrawStippled(), IsSolid(), this);
+		GetRotation(), 0,0,
+		DrawStippled(), IsSolid(), GetThickness(), this);
 
 	return str;
 }
@@ -221,14 +207,6 @@ void CRectangle::SetHeight(float fHeight)
 
 	SetRect(rect);
 }
-
-/*void CRectangle::SetCenter(const CPointf &center)
-{
-	CRectF rect = GetRect();
-	rect.SetCenter(CVector2D(center.x, center.y));
-
-	SetRect(rect);
-}*/
 
 CDrawingObject* CRectangle::Duplicate() const
 {

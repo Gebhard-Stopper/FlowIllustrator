@@ -66,6 +66,23 @@ CEllipsoid::CEllipsoid(const CPointf& ptCenter, float radius1, float radius2, co
 	_init(bSolid);
 }
 
+CEllipsoid::CEllipsoid(CDrawingObjectParams& params)
+	:CDrawingObject ( static_cast<DrawingObjectType>(params.GetValueInt(DOP_TYPE)) )
+{
+
+	if (params.HasValue(DOP_CENTER_X) && params.HasValue(DOP_CENTER_Y)) {
+		CSimpleVariant dummy1, dummy2;
+
+		params.popValue(DOP_CENTER_X, dummy1);
+		params.popValue(DOP_CENTER_Y, dummy2);
+
+		SetCenter( CPointf(dummy1.GetFloatVal(), dummy2.GetFloatVal()) );
+	}
+
+	_init(params.GetValueInt(DOP_ISSOLID));
+	SetParams(params);
+}
+
 void CEllipsoid::_init(bool bSolid)
 {
 	IsSolid(bSolid);
@@ -168,6 +185,12 @@ void CEllipsoid::SetRadius1(float radius)
 void CEllipsoid::SetRadius2(float radius) 
 { 
 	setHeight(2.0f*radius);
+	_OnParamsChanged();
+}
+
+void CEllipsoid::SetCenter(const CPointf &point)
+{
+	CDrawingObject::SetCenter(point);
 	_OnParamsChanged();
 }
 

@@ -33,14 +33,31 @@ CTriangle::CTriangle(const CRectF &rect, const floatColor& color)
 	:CDrawingObject(rect, DO_TRIANGLE, color)
 {
 	IsSolid(true);
-	m_pVertBuff = new GLfloat[6*sizeof(GLfloat)];
+	_initVertexBuffer();
 	SetRect(rect);
+}
+
+CTriangle::CTriangle(const CDrawingObjectParams& params)
+	: CDrawingObject( DO_TRIANGLE )
+{
+	_initVertexBuffer();
+	SetParams(params);
+}
+
+void CTriangle::_initVertexBuffer()
+{
+	m_Vertices.clear();
+	m_Vertices.reserve(3);
+
+	for (int i=0; i<3; ++i) {
+		m_Vertices.push_back(CPointf(0.0f,0.0f));
+	}
 }
 
 
 CTriangle::~CTriangle(void)
 {
-	delete [] m_pVertBuff;
+	m_Vertices.clear();
 }
 
 void CTriangle::Draw()
@@ -75,23 +92,9 @@ void CTriangle::Draw()
 void CTriangle::_draw()
 {
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, m_pVertBuff);
+	glVertexPointer(2, GL_FLOAT, 0, &m_Vertices[0]);
 	glDrawArrays( (IsSolid())? GL_TRIANGLES: GL_LINE_LOOP, 0, 3);
 	glDisableClientState(GL_VERTEX_ARRAY);
-}
-
-bool CTriangle::setParam(DrawinObjectParamName paramID, const CSimpleVariant &val)
-{
-	bool bResult(CDrawingObject::setParam(paramID, val));
-
-	if (!bResult)
-	{
-		switch (paramID)
-		{
-			
-		}
-	}
-	return bResult;
 }
 
 void CTriangle::OnSetParams()
@@ -114,9 +117,9 @@ void CTriangle::Translate(float tx, float ty)
 {
 	CDrawingObject::Translate(tx, ty);
 
-	CVector2D dummy(tx, ty);
+	CPointf dummy(tx, ty);
 	for (int i=0; i<3; i++) {
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[i] += dummy;
+		m_Vertices[i] += dummy;
 	}
 
 	_OnParamsChanged();
@@ -131,9 +134,9 @@ void CTriangle::_calcGlVertexPos()
 {
 	CRectF rect = GetRect();
 
-	reinterpret_cast<CVector2D*>(m_pVertBuff)[0] = CVector2D(rect.m_Min.x, rect.m_Min.y + rect.getHeight()/2.0f);
-	reinterpret_cast<CVector2D*>(m_pVertBuff)[1] = CVector2D(rect.m_Max.x, rect.m_Min.y);
-	reinterpret_cast<CVector2D*>(m_pVertBuff)[2] = CVector2D(rect.m_Max.x, rect.m_Max.y);
+	m_Vertices[0] = CPointf(rect.m_Min.x, rect.m_Min.y + rect.getHeight()/2.0f);
+	m_Vertices[1] = CPointf(rect.m_Max.x, rect.m_Min.y);
+	m_Vertices[2] = CPointf(rect.m_Max.x, rect.m_Max.y);
 
 	CPointf center = _getCenter();
 	CVector2D transVec(center.x, center.y);
@@ -141,9 +144,9 @@ void CTriangle::_calcGlVertexPos()
 	float rad = DegToRad(GetRotation());
 
 	for (int i=0; i<3; i++) {
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[i] -= transVec;
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[i].Rotate(rad);
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[i] += transVec;
+		m_Vertices[i] -= transVec;
+		m_Vertices[i].Rotate(rad);
+		m_Vertices[i] += transVec;
 	}
 }
 

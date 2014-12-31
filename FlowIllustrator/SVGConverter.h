@@ -29,7 +29,9 @@
 #include "DrawingObjectMngr.h"
 #include "Markup.h"
 #include <hash_map>
+#include "SimpleXML.h"
 
+using namespace simplexml;
 using namespace std;
 
 
@@ -63,6 +65,8 @@ public:
 	 */
 	static BOOL LoadSVG(const CString &strFileName, CDocument &document);
 
+	static void _ReconstructObjects(shared_ptr<CSimpleXMLNode> objectNode, CDrawingObjectMngr *pMngr);
+
 	/**
 	 *	Retrieve a SVG string, representing all CDrawingObject-derived elements in the domain of the curretn vector field.
 	 *
@@ -82,7 +86,7 @@ private:
 	 *
 	 *	@remarks Called by _stepInside() when a new Object is discovered.
 	 */
-	static void _addNewDrawingObject(__in CMarkup &doc, __out CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor);
+	//static void _addNewDrawingObject(__in CMarkup &doc, __out CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor);
 	
 	/**
 	 *	Checks if the file, specified by strOriginalFileName actually exists, and further determines,
@@ -106,7 +110,7 @@ private:
 	 *
 	 *	@return The time step for which the illustration in this file is valid.
 	 */
-	static int _stepInside(__in CMarkup &doc, __out CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor);
+	//static int _stepInside(__in CMarkup &doc, __out CDrawingObjectMngr &dataContainer, __out hash_map<unsigned int, CDrawingObject*> &objCache, float fLinewidthFactor);
 	
 	/**
 	 *	Extracts the color, thickness, as well as if an object is solid from an SVG-conform obejct.
@@ -116,7 +120,7 @@ private:
 	 *	@param bSolid		Pointer to a bool, that receives if the object is solod.
 	 *	@param fLineWidth	Pointer to a float, that receives the thickness of the object.
 	 */
-	static void parseStyleString(__in const CString& strSource, __out LPFLOATCOLOR pColor, __out BOOL &bSolid, __out float &fLineWidth);
+	static void parseStyleString(__in const CString& strSource, __out LPFLOATCOLOR pColor);
 	
 	/**
 	 *	Extracts the rotation of an SVG-conform obejct.
@@ -146,7 +150,7 @@ private:
 	 *
 	 *	@return If the attribute is found, this function returns the corresponding value, otherwise it returns the specified defualt value.
 	 */
-	static int _getIntAttrib(__in CMarkup &doc, __in const CString& strAttribName, int nDefualt=0);
+	//static int _getIntAttrib(__in CMarkup &doc, __in const CString& strAttribName, int nDefualt=0);
 
 	/**
 	 *	Extract a single unsigned integer attribute of the current Object.
@@ -157,7 +161,7 @@ private:
 	 *
 	 *	@return If the attribute is found, this function returns the corresponding value, otherwise it returns the specified defualt value.
 	 */
-	static unsigned int _getHexAttrib(CMarkup &doc, const CString& strAttribName, int nDefault=0);
+	//static unsigned int _getHexAttrib(CMarkup &doc, const CString& strAttribName, int nDefault=0);
 	
 	/**
 	 *	Extract a single bool attribute of the current Object.
@@ -179,7 +183,7 @@ private:
 	 *
 	 *	@return If the attribute is found, this function returns the corresponding value, otherwise it returns the specified defualt value.
 	 */
-	static floatColor _getColorAttrib(__in CMarkup &doc, __in const CString& strAttribName, const floatColor &defaultValue);
+	//static floatColor _getColorAttrib(__in CMarkup &doc, __in const CString& strAttribName, const floatColor &defaultValue);
 
 	/**
 	 *	Extract a single CPointf attribute of the current Object.
@@ -190,7 +194,7 @@ private:
 	 *
 	 *	@return If the attribute is found, this function returns the corresponding value, otherwise it returns the specified defualt value.
 	 */
-	static CPointf _getPointfAttrib(__in CMarkup &doc, __in const CString& strAttribName, const CPointf &defaultValue = CPointf(0,0));
+	//static CPointf _getPointfAttrib(__in CMarkup &doc, __in const CString& strAttribName, const CPointf &defaultValue = CPointf(0,0));
 	
 	/**
 	 *	Extracts afloat color from the supplied string.
@@ -206,7 +210,9 @@ private:
 	 *				The alpah value of the returned floatColor, by default is set to 1.0f .
 	 */
 	static floatColor _extractFloatColor(__in const CString &str);
-	
+	static CPointf _extractPointf(__in const CString &str);
+	static CVector2D _extractVector2D(__in const CString &str);
+	static unsigned int _extractHexAttrib(const CString& strHexValue, unsigned int nDefault);
 	/**
 	 *	Extract 2D coordinates.
 	 *
@@ -221,7 +227,8 @@ private:
 	 *				This function parses the entire data-string of the given attribute. The resulting number of points
 	 *				may therefore be more or less than specified by numVertices.
 	 */
-	static void _getVertices(__in CMarkup &doc, __in const CString& strAttribName, __out vector<CPointf>* pDest, int numVertices);
+	//static void _getVertices(__in CMarkup &doc, __in const CString& strAttribName, __out vector<CPointf>* pDest, int numVertices);
+	static void _getVertices(__in const CString& strVertices, __in int numVertices, __out vector<CPointf>* pDest);
 
 	/**
 	 *	Helper function to read parameters common to all CDrawingObjects.
@@ -229,7 +236,7 @@ private:
 	 *	@param doc	Reference to a CMarkup obejct, maintaining the current position inside the SVG file.
 	 *	@param params	Reference to a CDrawingObjectParams object to receive the parameter/value pairs.
 	 */
-	static void _getBaseParams(__in CMarkup& doc, CDrawingObjectParams &params);
+	//static void _getBaseParams(__in CMarkup& doc, CDrawingObjectParams &params);
 
 	/**
 	 *	Helper function to read parameters common to all objects derived from CStreamLine.
@@ -237,7 +244,7 @@ private:
 	 *	@param doc	Reference to a CMarkup obejct, maintaining the current position inside the SVG file.
 	 *	@param params	Reference to a CDrawingObjectParams object to receive the parameter/value pairs.
 	 */
-	static void _getStreamLineParams(__in CMarkup& doc, CDrawingObjectParams &params);
+	//static void _getStreamLineParams(__in CMarkup& doc, CDrawingObjectParams &params);
 
 	/**
 	 *	This function retrieves the factor to map from pixel-coordinate to domain-coordinates.
@@ -253,69 +260,137 @@ private:
 
 	 *	@return The object type as DrawingObjectType.
 	 */
-	static DrawingObjectType _getDrawingObjectType(__in CMarkup &doc);
+	//static DrawingObjectType _getDrawingObjectType(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CTriangle from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CTriangleObject.
 	 */
-	static CDrawingObject* _getTriangle(__in CMarkup &doc);
+	//static CDrawingObject* _getTriangle(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CEllipsoid from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CEllipsoid.
 	 */
-	static CDrawingObject* _getEllipse(__in CMarkup &doc);
+	//static CDrawingObject* _getEllipse(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CRectangle from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CRectangle.
 	 */
-	static CDrawingObject* _getRectangle(__in CMarkup &doc);
+	//static CDrawingObject* _getRectangle(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CVortexObj from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CVortexObj.
 	 */
-	static CDrawingObject* _getVortex(__in CMarkup &doc);
+	//static CDrawingObject* _getVortex(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CStreamLine from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CStreamLine.
 	 */
-	static CDrawingObject* _getStreamLine(__in CMarkup &doc);
+	//static CDrawingObject* _getStreamLine(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CPathLine from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CPathLine.
 	 */
-	static CDrawingObject* _getPathLine(__in CMarkup &doc);
+	//static CDrawingObject* _getPathLine(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CStreakLine from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CStreakLine.
 	 */
-	static CDrawingObject* _getStreakLine(__in CMarkup &doc);
+	//static CDrawingObject* _getStreakLine(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CTimeLine from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CTimeLine.
 	 */
-	static CDrawingObject* _getTimeLine(__in CMarkup &doc);
+	//static CDrawingObject* _getTimeLine(__in CMarkup &doc);
 
 	/**
 	 *	Extract a CSpeedLine from the current location in the SVG file.
 	 *
 	 *	@return Pointer to a new CSpeedLine.
 	 */
-	static CDrawingObject* _getSpeedLine(__in CMarkup &doc);
+	//static CDrawingObject* _getSpeedLine(__in CMarkup &doc);
+
+
+
+
+
+
+	static CDrawingObject* _get_X_Line(__in shared_ptr<CSimpleXMLNode> node, DrawingObjectType nType);
+
+	static CDrawingObject* _getTriangle(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CEllipsoid from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CEllipsoid.
+	 */
+	static CDrawingObject* _getEllipse(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CRectangle from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CRectangle.
+	 */
+	static CDrawingObject* _getRectangle(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CVortexObj from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CVortexObj.
+	 */
+	static CDrawingObject* _getVortex(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CStreamLine from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CStreamLine.
+	 */
+	static CDrawingObject* _getStreamLine(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CPathLine from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CPathLine.
+	 */
+	static CDrawingObject* _getPathLine(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CStreakLine from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CStreakLine.
+	 */
+	static CDrawingObject* _getStreakLine(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CTimeLine from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CTimeLine.
+	 */
+	static CDrawingObject* _getTimeLine(__in shared_ptr<CSimpleXMLNode> node);
+
+	/**
+	 *	Extract a CSpeedLine from the current location in the SVG file.
+	 *
+	 *	@return Pointer to a new CSpeedLine.
+	 */
+	static CDrawingObject* _getSpeedLine(__in shared_ptr<CSimpleXMLNode> node);
+
+	static void _getParams(__in shared_ptr<CSimpleXMLNode> node, __out CDrawingObjectParams& params);
+	static CSimpleVariant _parseValue (DrawinObjectParamName nParamName, const CString& strVal);
 };
 

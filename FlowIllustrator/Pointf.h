@@ -100,6 +100,18 @@ public:
 		return *this;
 	}
 
+	__inline CPointf& operator += (const CVector2D& vec) {
+		x += vec.x;
+		y += vec.y;
+		return *this;
+	}
+
+	__inline CPointf& operator -= (const CVector2D& vec) {
+		x -= vec.x;
+		y -= vec.y;
+		return *this;
+	}
+
 	/**
 	 *	Translation operator.
 	 *		
@@ -208,6 +220,26 @@ public:
 		CString str;
 		str.Format(_T("%f,%f"), x, y);
 		return str;		
+	}
+
+	/**
+	 *	Rotate the vector in a counter clockwise fashon.
+	 *
+	 *	@param angle The relative angle to rotate the vector, in radians.
+	 *
+	 *	@return	A reference to this, rotated CVector2D object.
+	 */
+	__inline CPointf& Rotate(const float angle){
+		const float s = sinf(angle);
+		const float c = cosf(angle);
+    
+		const float nx = c * x - s * y;
+		const float ny = s * x + c * y;
+    
+		x = nx;
+		y = ny;
+    
+		return *this;
 	}
 };
 
