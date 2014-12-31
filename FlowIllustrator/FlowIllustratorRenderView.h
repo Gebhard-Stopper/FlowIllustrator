@@ -69,7 +69,9 @@ protected:
 
 	CScalarField2D *m_pVortField;			/**< Pointer to the vorticity field, corresponding to the vector field of the current frame. */
 	CScalarField2D *m_pVortFieldAbs;		/**< Pointer to the absolute vorticity field, corresponding to the vector field of the current frame. */
+	CScalarField2D *m_pVectorMagnitudeField;
 	BOOL			m_bVorticityValid;		/**< If true, the vorticity does not need to be re-computed. */
+	BOOL			m_bVectorMagnitudeValid;
 
 	int			 m_nColorOffset;			/**< Manipulator for the base color for drawing the vector field. */
 	float		*m_pScreenCoordinateBuffer; /**< Buffer, which contains coordinates for each pixel on the canvas. */
@@ -258,6 +260,8 @@ protected:
 	 */
 	BOOL AcquireVorticityField();
 
+	BOOL AcquireVectorMagnitudeField();
+
 	/**
 	 *	Adjust the viewport, according to the current zoom factor. 
 	 *
@@ -417,6 +421,8 @@ protected:
 	 *	@param pVectorField Pointer to the vector field to be rendered.
 	 */
 	void renderVorticity(const CAmiraVectorField2D *pVectorField);
+
+	void _renderScalarField(CScalarField2D *pSrc);
 
 	/**
 	 *	Calculates the partial derivative in X-direction and uses

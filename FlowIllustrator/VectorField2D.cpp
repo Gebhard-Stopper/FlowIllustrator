@@ -239,6 +239,32 @@ CVector2D CVectorField2D::_getVectorAt(float x, float y) const
 	return (v1 * wy + v2 * (1.0f - wy)) * wx + (v3 * wy + v4 * (1.0f - wy)) * (1.0f - wx);
 }
 
+CScalarField2D* CVectorField2D::GetMagnitudeField() const
+{
+	CScalarField2D *pMagField = new CScalarField2D(m_rcDomain, m_nSamplesX, m_nSamplesY);
+	CVector2D *pData = reinterpret_cast<CVector2D *>(m_pData);
+
+	static float min, max;
+
+	min = max = pData[0,0].abs();
+	int nIdx(0);
+	
+	for (unsigned int j = 0; j < m_nSamplesY; j++)
+	{
+		for (unsigned int i = 0; i < m_nSamplesX; i++)
+		{
+			float curr = pData[j * m_nSamplesX + i].abs();
+			if (curr > max) max = curr;
+			else if (curr < min) min = curr;
+			(*pMagField)[nIdx++] = curr;
+		}
+	}
+	
+	pMagField->SetMinMax(min, max);
+
+	return pMagField;
+}
+
 CScalarField2D* CVectorField2D::GetVorticityField(bool bGetMagnitude) const
 {
 	CScalarField2D *pVortField = new CScalarField2D(m_rcDomain, m_nSamplesX, m_nSamplesY);

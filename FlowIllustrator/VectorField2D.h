@@ -127,6 +127,8 @@ public:
 	 */
 	virtual CRITICAL_POINT_TYPE GetCriticalPointType(const CPointf& point) const;
 
+
+	virtual CScalarField2D* GetMagnitudeField() const;
 	/**
 	 *	Returns the corresponding vorticity field to the vector field.
 	 *

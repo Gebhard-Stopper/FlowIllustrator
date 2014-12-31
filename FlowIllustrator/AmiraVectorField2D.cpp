@@ -276,6 +276,23 @@ CVectorField2D* CAmiraVectorField2D::_getVectorFieldPtr(int time) const
 	return pDummy;
 }
 
+CScalarField2D* CAmiraVectorField2D::GetVectorMagnitudeField(float time) const
+{
+	CVectorField2D *pDummy;
+
+	if (time < 0)
+		pDummy = _getCurrentVectorFieldPtr();
+	else
+		pDummy = _getVectorFieldPtr(static_cast<int>(time));
+
+	CScalarField2D *pRetVal = pDummy->GetMagnitudeField();
+	
+	pDummy->m_pData = nullptr;
+	delete pDummy;
+
+	return pRetVal;
+}
+
 CScalarField2D* CAmiraVectorField2D::GetVorticityField(bool bGetMagnitude, float time) const
 {
 	CVectorField2D *pDummy;

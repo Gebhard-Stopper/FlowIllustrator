@@ -340,6 +340,8 @@ public:
 	 */
 	virtual float GetVorticity(float dx, float dy) const;
 
+
+	virtual CScalarField2D* GetVectorMagnitudeField(float time = -1) const;
 	/**
 	 *	Returns the corresponding vorticity field to the vector field.
 	 *

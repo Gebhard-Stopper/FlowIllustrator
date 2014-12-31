@@ -89,6 +89,7 @@ CFlowIllustratorRenderView::CFlowIllustratorRenderView()
 	m_pColorBuffer				= nullptr;
 	m_pVortField				= nullptr;
 	m_pVortFieldAbs				= nullptr;
+	m_pVectorMagnitudeField		= nullptr;
 	m_pDrawObjMngr				= nullptr;
 	m_pLICNoiseTex				= nullptr;
 	m_fPixelUnitRatioX			= 1.0f;
@@ -103,6 +104,7 @@ CFlowIllustratorRenderView::CFlowIllustratorRenderView()
 	m_nLicSeed					= 42;
 	m_nLicIntegrationLen		= 1000;
 	m_bVorticityValid			= FALSE;
+	m_bVectorMagnitudeValid		= FALSE;
 	m_bLICNoiseTexValid			= FALSE;
 	m_bDrawCoordinateAxes		= TRUE;
 
@@ -570,6 +572,30 @@ BOOL CFlowIllustratorRenderView::AcquireVorticityField()
 	return (m_bVorticityValid = FALSE);
 }
 
+BOOL CFlowIllustratorRenderView::AcquireVectorMagnitudeField()
+{
+	if (m_bVectorMagnitudeValid) return m_bVectorMagnitudeValid;
+
+	CFlowIllustratorDoc *pDoc = GetDocument();
+	if (pDoc)
+	{
+		const CAmiraVectorField2D *pVecField = pDoc->GetVectorfield();
+		if (pVecField)
+		{
+			if (m_pVectorMagnitudeField) {delete m_pVectorMagnitudeField; m_pVectorMagnitudeField = nullptr;}
+
+			m_pVectorMagnitudeField = pVecField->GetVectorMagnitudeField();
+
+			if (m_pVectorMagnitudeField)
+			{
+				return (m_bVectorMagnitudeValid = TRUE);
+			}
+		}
+	}
+
+	return (m_bVectorMagnitudeValid = FALSE);
+}
+
 void CFlowIllustratorRenderView::AdjustViewport(BOOL bCenterOnMousePos)
 {
 	CFlowIllustratorDoc* pDoc = GetDocument();
@@ -857,49 +883,23 @@ void CFlowIllustratorRenderView::renderColorCoding(const CAmiraVectorField2D *pV
 
 void CFlowIllustratorRenderView::renderVectorMagnitude(const CAmiraVectorField2D *pVectorField)
 {
-	//calculate the colors for the vectors
-	float *pColor = &m_pColorBuffer[0];
-
-	int numVals = m_yExtent*m_xExtent;
-	float *vals = new float [numVals];
-	float max = 0.0;
-
-	for (int y = m_yMin; y < (m_yExtent+m_yMin); y++) 
-	{
-		for (int x = m_xMin; x < (m_xExtent+m_xMin); x++) 
-		{
-			CPointf pos = ScreenToDomain(CPoint(x, y));
-
-			CVector2D v = pVectorField->GetVectorAt(pos);
-			float val = v.abs();
-
-			if (val > max) max = val;
-			vals[ (y-m_yMin)*m_xExtent + (x-m_xMin)] = val;
-		}
-	}
-
-	for (int i=0;i < numVals; i++)
-	{
-		float val = vals[i]/max;
-		float alpha = (acos(val) * 180.0f / PI)+ 90.f + m_nColorOffset;
-		if (alpha > 360.0) alpha = fmod(alpha, 360.0f);
-
-		HSVtoRGB(&pColor[0], &pColor[1], &pColor[2], alpha, val, val);
-		pColor += 3;
-	}
-
-	delete [] vals;
+	if (!AcquireVectorMagnitudeField()) return;
+	_renderScalarField(m_pVectorMagnitudeField);
 }
 
 void CFlowIllustratorRenderView::renderVorticity(const CAmiraVectorField2D* /*pVectorField*/)
 {
+	if (!AcquireVorticityField()) return;
+	_renderScalarField(m_pVortField);
+}
+
+void CFlowIllustratorRenderView::_renderScalarField(CScalarField2D *pSrc)
+{
 	//calculate the colors for the vectors
 	float *pColor = &m_pColorBuffer[0];
 
-	if (!AcquireVorticityField()) return;
-
-	float max(m_pVortField->GetMaxValue());
-	float min(m_pVortField->GetMinValue());
+	float max(pSrc->GetMaxValue());
+	float min(pSrc->GetMinValue());
 	float colVar(0);
 
 	for (int y = m_yMin; y < (m_yExtent+m_yMin); y++) 
@@ -908,7 +908,7 @@ void CFlowIllustratorRenderView::renderVorticity(const CAmiraVectorField2D* /*pV
 		{
 			CPointf pos(ScreenToDomain(CPoint(x, y)));
 			
-			float dummy( m_pVortField->GetValue(pos) );
+			float dummy( pSrc->GetValue(pos) );
 
 			if (dummy >= 0.0f) {
 				dummy = dummy/max;
@@ -1407,6 +1407,9 @@ void CFlowIllustratorRenderView::OnDestroy()
 
 	if (m_pVortFieldAbs)
 		delete m_pVortFieldAbs;
+
+	if (m_pVectorMagnitudeField)
+		delete m_pVectorMagnitudeField;
 
 	if (m_pLICNoiseTex)
 		delete m_pLICNoiseTex;

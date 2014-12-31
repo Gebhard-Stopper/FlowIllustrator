@@ -321,6 +321,7 @@ void CFlowIllustratorView::JumpToFirstFrame()
 	}
 
 	m_bVorticityValid = FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 
 	pDoc->FirstFrame();
 }
@@ -334,6 +335,7 @@ void CFlowIllustratorView::JumpToPreviousFrame()
 	}
 
 	m_bVorticityValid = FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 
 	pDoc->PreviousFrame();
 }
@@ -356,6 +358,7 @@ void CFlowIllustratorView::JumpToNextFrame()
 	}
 
 	m_bVorticityValid = FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 
 	pDoc->NextFrame();
 }
@@ -369,6 +372,7 @@ void CFlowIllustratorView::JumpToLastFrame()
 	}
 
 	m_bVorticityValid = FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 
 	pDoc->LastFrame();
 }
@@ -382,6 +386,7 @@ void CFlowIllustratorView::JumpToFrame(int nFrame)
 	}
 
 	m_bVorticityValid = FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 
 	pDoc->GotoFrame(nFrame);
 }
@@ -544,6 +549,7 @@ void CFlowIllustratorView::DocumentLoaded(void)
 	SetEditMode(m_nEditMode);
 
 	m_bVorticityValid	= FALSE;
+	m_bVectorMagnitudeValid = FALSE;
 	m_bLICNoiseTexValid	= FALSE;
 
 	m_nLicWidth		= pVecField->GetExtentX();
@@ -2258,6 +2264,15 @@ LRESULT CFlowIllustratorView::OnDocFrameChanged(WPARAM /*wParam*/, LPARAM /*lPar
 	if (pMainFrm)
 	{
 		pMainFrm->SetCurrentFrame(pDoc->GetCurrentFrameNo());
+	}
+
+	auto pVecfield = pDoc->GetVectorfield();
+	if (pVecfield)
+	{		
+		if (AcquireVectorMagnitudeField())
+		{
+			MAX_VELOCITY = m_pVectorMagnitudeField->GetMaxValue();
+		}
 	}
 
 	if (!pDoc->IsLoadingSVG()) {

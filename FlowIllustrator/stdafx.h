@@ -68,6 +68,9 @@
 #include "GL\freeglut.h"
 
 
+static float MAX_VORTICITY = 1.0f;
+static float MAX_VELOCITY = 1.0f;
+
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>           // MFC support for Internet Explorer 4 Common Controls
 #endif
