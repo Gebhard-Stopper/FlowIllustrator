@@ -403,7 +403,6 @@
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Vector2D.h" />
     <ClInclude Include="Vector3D.h" />
-    <ClInclude Include="VectorField.h" />
     <ClInclude Include="VectorField2D.h" />
     <ClInclude Include="VortexObj.h" />
   </ItemGroup>
@@ -461,7 +460,6 @@
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Vector2D.cpp" />
     <ClCompile Include="Vector3D.cpp" />
-    <ClCompile Include="VectorField.cpp" />
     <ClCompile Include="VectorField2D.cpp" />
     <ClCompile Include="VortexObj.cpp" />
   </ItemGroup>

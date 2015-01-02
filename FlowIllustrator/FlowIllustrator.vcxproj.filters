@@ -170,9 +170,6 @@
     <ClInclude Include="amirareader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VectorField.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VectorField2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -326,9 +323,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="amirareader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VectorField.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VectorField2D.cpp">

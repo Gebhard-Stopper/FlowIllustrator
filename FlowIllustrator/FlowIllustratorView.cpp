@@ -567,7 +567,7 @@ void CFlowIllustratorView::NewDocument(void)
 {
 	NotifyDrawingObjsChanged();
 
-	m_Selected.clear();
+	Select(-1, FALSE);
 	ResetViewport();
 	UpdateStatusBar();
 }
@@ -1045,6 +1045,8 @@ void CFlowIllustratorView::UpdateRibbon(CDrawingObject* pObj, BOOL bAddToSelecti
 
 	if (pMainFrm)
 	{
+		if (!pObj) pObj = m_pCreateDummy.get();
+
 		if(pObj)
 		{
 			CDrawingObjectParams params(pObj->GetParams());
@@ -1067,65 +1069,9 @@ void CFlowIllustratorView::UpdateSelected(CDrawingObjectParams &params)
 	if (!m_Selected.empty())
 	{
 		for (size_t i=0;i < m_Selected.size(); i++)
-		{
-			auto pObj = m_Selected[i]->m_pSelected;
-
-			bool bResult (pObj->SetParams(params));
-
-			switch (pObj->GetType())
-			{
-				case DO_STREAMLINE:
-				case DO_PATHLINE:
-				case DO_STREAKLINE:
-				case DO_TIMELINE:
-				{
-					CStreamLine *pStreamLine = reinterpret_cast<CStreamLine*>(pObj.get());
-
-					//Only recalc if necessary
-					if ( params.HasValue(DOP_ORIGIN) || params.HasValue(DOP_STEPLENGTH) || params.HasValue(DOP_INTEGRATIONSTEPS)
-						|| params.HasValue(DOP_STARTFRAME) || params.HasValue(DOP_USE_STARTFRAME) || pObj->GetType() == DO_TIMELINE)
-					{
-						calcCharacteristicLine(pStreamLine, pStreamLine->GetOrigin());
-					}
-
-					if (params.HasValue(DOP_SMOOTHNESS)) {
-						pStreamLine->Smooth(pStreamLine->GetSmoothness());
-					}
-
-					CalcStreamlineBoundingBox(pStreamLine);
-
-					if (pObj->GetType() == DO_TIMELINE) {
-						CTimeLine *pTimeLine = reinterpret_cast<CTimeLine*>(pObj.get());
-
-						if (pTimeLine->ShowTrajectory()) {
-							if( params.HasValue(DOP_SHOWTRAJECTORY) || params.HasValue(DOP_TRAJECTORYSTEPS) || 
-							params.HasValue(DOP_TRANSPARENTTRAJECTORY)) 
-							{
-								calcTimeLineTrajectory(pTimeLine);
-							}
-						}
-					}
-					break;
-				}
-				case DO_VORTEX:
-				{
-					CVortexObj *pVort = reinterpret_cast<CVortexObj*>(pObj.get());
-					if (pVort->ShowTrajectory())
-					{
-						if( params.HasValue(DOP_SHOWTRAJECTORY) || params.HasValue(DOP_TRAJECTORYSTEPS) || 
-							params.HasValue(DOP_TRANSPARENTTRAJECTORY)) 
-						{
-							calcVortexTrajectory(pVort);
-						}
-					}
-					break;
-				}
-			}
-
-			if ( (pObj->GetType() == DO_VORTEX || pObj->GetType() == DO_TIMELINE) && bResult )
-				if (params.GetValueBool(DOP_SHOWTRAJECTORY)) {
-					OnSelectDrawingObject(pObj.get(), true);
-			}
+		{			
+			auto pObj = m_Selected[i]->m_pSelected.get();
+			UpdateParams(pObj, params);
 
 			//Update corresponding tracker rect
 			if (i < m_Selected.size()) {
@@ -1133,9 +1079,73 @@ void CFlowIllustratorView::UpdateSelected(CDrawingObjectParams &params)
 				m_Selected[i]->SetRotation(pObj->GetRotation());
 			}
 		}
-
-		NotifyDrawingObjsChanged();
 	}
+	else
+	{
+		UpdateParams(m_pCreateDummy.get(), params);		
+	}
+	
+	NotifyDrawingObjsChanged();
+}
+
+void CFlowIllustratorView::UpdateParams(CDrawingObject *pObj, const CDrawingObjectParams& params)
+{
+	bool bResult (pObj->SetParams(params));
+
+	switch (pObj->GetType())
+	{
+		case DO_STREAMLINE:
+		case DO_PATHLINE:
+		case DO_STREAKLINE:
+		case DO_TIMELINE:
+		{
+			CStreamLine *pStreamLine = reinterpret_cast<CStreamLine*>(pObj);
+
+			//Only recalc if necessary
+			if ( params.HasValue(DOP_ORIGIN) || params.HasValue(DOP_STEPLENGTH) || params.HasValue(DOP_INTEGRATIONSTEPS)
+				|| params.HasValue(DOP_STARTFRAME) || params.HasValue(DOP_USE_STARTFRAME) || pObj->GetType() == DO_TIMELINE)
+			{
+				calcCharacteristicLine(pStreamLine, pStreamLine->GetOrigin());
+			}
+
+			if (params.HasValue(DOP_SMOOTHNESS)) {
+				pStreamLine->Smooth(pStreamLine->GetSmoothness());
+			}
+
+			CalcStreamlineBoundingBox(pStreamLine);
+
+			if (pObj->GetType() == DO_TIMELINE) {
+				CTimeLine *pTimeLine = reinterpret_cast<CTimeLine*>(pObj);
+
+				if (pTimeLine->ShowTrajectory()) {
+					if( params.HasValue(DOP_SHOWTRAJECTORY) || params.HasValue(DOP_TRAJECTORYSTEPS) || 
+					params.HasValue(DOP_TRANSPARENTTRAJECTORY)) 
+					{
+						calcTimeLineTrajectory(pTimeLine);
+					}
+				}
+			}
+			break;
+		}
+		case DO_VORTEX:
+		{
+			CVortexObj *pVort = reinterpret_cast<CVortexObj*>(pObj);
+			if (pVort->ShowTrajectory())
+			{
+				if( params.HasValue(DOP_SHOWTRAJECTORY) || params.HasValue(DOP_TRAJECTORYSTEPS) || 
+					params.HasValue(DOP_TRANSPARENTTRAJECTORY)) 
+				{
+					calcVortexTrajectory(pVort);
+				}
+			}
+			break;
+		}
+	}
+
+	if ( (pObj->GetType() == DO_VORTEX || pObj->GetType() == DO_TIMELINE) && bResult )
+		if (params.GetValueBool(DOP_SHOWTRAJECTORY)) {
+			OnSelectDrawingObject(pObj, true);
+	}	
 }
 
 void CFlowIllustratorView::TranslateSelected(UINT direction, bool bMoveFast)
@@ -1467,9 +1477,9 @@ void CFlowIllustratorView::AddNewTimeLine(const CPointf& ptSeedLineStart, const 
 
 void CFlowIllustratorView::SetEditMode(EDIT_MODE nMode)
 {
-	if (!m_Selected.empty()) {
+	/*if (!m_Selected.empty()) {
 		m_Selected.clear();
-	}
+	}*/
 
 	if (m_pCreateDummy) {
 		m_pCreateDummy = nullptr;
@@ -1530,6 +1540,8 @@ void CFlowIllustratorView::SetEditMode(EDIT_MODE nMode)
 	if (pNewObj) {
 		m_pCreateDummy = shared_ptr<CDrawingObject>(pNewObj);
 	}
+
+	Select(-1, FALSE);
 }
 
 void CFlowIllustratorView::SetStreamlineLength(int nNumSteps)

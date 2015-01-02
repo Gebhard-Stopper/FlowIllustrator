@@ -212,6 +212,7 @@ public:
 	BOOL GetRenderStreaklineAsParticles() const;
 	
 	void UpdateSelected(CDrawingObjectParams &params);
+	void UpdateParams(CDrawingObject *pObj, const CDrawingObjectParams& params);
 
 	void TranslateSelected(UINT direction, bool bMoveFast);
 	void RotateSelected(UINT direction, bool bMoveFast);
