@@ -27,13 +27,15 @@
 
 #pragma once
 
-/*
-	This is a pure virtual class that serves as a base class for 2D and 3D vectors
-*/
-class CMathVector
+namespace FICore
 {
-public:
-	CMathVector(void);
-	~CMathVector(void);
-};
-
+	/*
+		This is a pure virtual class that serves as a base class for 2D and 3D vectors
+	*/
+	class CMathVector
+	{
+	public:
+		CMathVector(void){}
+		~CMathVector(void){}
+	};
+}

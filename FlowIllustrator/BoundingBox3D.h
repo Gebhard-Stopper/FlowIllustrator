@@ -27,6 +27,7 @@
 
 #pragma once
 #include "Vector3D.h"
+using namespace FICore;
 
 class CBoundingBox3D
 {

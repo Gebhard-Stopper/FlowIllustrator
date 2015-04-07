@@ -46,6 +46,8 @@
 #include "Markup.h"
 #include "DrawingObjectMngr.h"
 
+using namespace FICore;
+
 const UINT WM_SAVE_SCREENSHOT = RegisterWindowMessage(_T("SAVE_SCREENSHOT"));
 const UINT WM_SVG_LOADED = RegisterWindowMessage(_T("WM_SVG_LOADED"));
 const UINT WM_DOC_FRAME_CHANGED = RegisterWindowMessage(_T("WM_DOC_FRAME_CHANGED"));

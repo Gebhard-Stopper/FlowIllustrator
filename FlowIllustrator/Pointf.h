@@ -28,6 +28,7 @@
 #pragma once
 
 #include "Vector2D.h"
+using namespace FICore;
 
 /**
  *	Class that represents a two-dimensional point.
@@ -120,8 +121,12 @@ public:
 	 *	@return The translated point as CVector2D.
 	 *
 	 */
-	__inline CVector2D operator + (const CVector2D& vec) {
-		return CVector2D(x+vec.x, y+vec.y);
+	__inline CPointf operator + (const CVector2D& vec) {
+		return CPointf(x+vec.x, y+vec.y);
+	}
+
+	__inline CPointf operator - (const CVector2D& vec) {
+		return CPointf(x-vec.x, y-vec.y);
 	}
 
 	/**

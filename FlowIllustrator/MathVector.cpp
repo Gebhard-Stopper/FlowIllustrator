@@ -28,12 +28,3 @@
 #include "StdAfx.h"
 #include "MathVector.h"
 
-
-CMathVector::CMathVector(void)
-{
-}
-
-
-CMathVector::~CMathVector(void)
-{
-}

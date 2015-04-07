@@ -28,14 +28,16 @@
 #include "StdAfx.h"
 #include "DataField.h"
 
-
-CDataField2D::CDataField2D(const CRectF &rcDomain, int nSamplesX, int nSamplesY)
-	:	m_nSamplesX(nSamplesX), m_nSamplesY(nSamplesY), m_rcDomain(rcDomain),
-		m_nMaxIdxX(nSamplesX-1), m_nMaxIdxY(nSamplesY-1)
+namespace FICore
 {
-}
+	CDataField2D::CDataField2D(const CRectF &rcDomain, int nSamplesX, int nSamplesY)
+		:	m_nSamplesX(nSamplesX), m_nSamplesY(nSamplesY), m_rcDomain(rcDomain),
+			m_nMaxIdxX(nSamplesX-1), m_nMaxIdxY(nSamplesY-1)
+	{
+	}
 
 
-CDataField2D::~CDataField2D(void)
-{
+	CDataField2D::~CDataField2D(void)
+	{
+	}
 }

@@ -211,19 +211,19 @@ void CEllipsoid::_calcGlVertexPos()
 	{
 		nStart			= 1;
 		m_nNumPoints	+= 2;
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[0] = CVector2D(center.x, center.y);
+		reinterpret_cast<CPointf*>(m_pVertBuff)[0] = CVector2D(center.x, center.y);
 	}
 
 	//calculate points around origin and rotate them
 	for (int i=nStart; i < m_nNumPoints; i++)
 	{
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[i] = center + CVector2D(	r1 * cos(i*step),
+		reinterpret_cast<CPointf*>(m_pVertBuff)[i] = center + CVector2D(	r1 * cos(i*step),
 			r2 * sin(i*step)).Rotate(rad);
 	}
 
 	if (IsSolid())
 	{
-		reinterpret_cast<CVector2D*>(m_pVertBuff)[m_nNumPoints-1] = reinterpret_cast<CVector2D*>(m_pVertBuff)[1];
+		reinterpret_cast<CPointf*>(m_pVertBuff)[m_nNumPoints-1] = reinterpret_cast<CPointf*>(m_pVertBuff)[1];
 	}
 }
 
